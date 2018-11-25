@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from .utils import Edge, Universe
 
+
 class Super_Region():
     @staticmethod
     def guass_filter(path):
@@ -34,6 +35,18 @@ class Super_Region():
         edges.sort(key=lambda x: x.weight)
         return edges
 
+    '''
+    This method will return a List which contains all super_regions.
+    args:
+        - path: the img's path. like: "../data/77.pnd"
+        - c : the thresholds: like: 166.
+    return:
+        - rlist = [
+                [[1,2], [2,3], ...], # points in super_region0
+                [[3,4] ...], # points in super_region1
+                ...
+            ]
+    '''
     @staticmethod
     def get_region(path, c):
         im = Super_Region.guass_filter(path)
@@ -52,6 +65,7 @@ class Super_Region():
                 thresholds[a] = e.weight + c / u.elts[a].size
         rlist = []
         index = 0
+        # use index_array to map the p to index
         index_array = np.ones(im_size, dtype=np.int32)*-1
         region = np.zeros(im.shape[0:2], dtype=np.int32)
         for y in range(im.shape[0]):
