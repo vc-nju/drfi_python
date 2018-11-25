@@ -23,19 +23,21 @@ class RegionFeature():
     def get_averval(rlist,img3u): #get average value of rgb,lab and hsv in each region
         num_reg = len(rlist)
         raverval = np.zeros((num_reg,9))
-        B,G,R = cv2.split(img3u)
+        # update: use np instead of list
+        imgchan = np.zeros( [9, img3u.shape[0], img3u.shape[1]] )
+        imgchan[0:3] = cv2.split(img3u) # B,G,R
         imglab = RegionFeature.get_labimg3f(img3u)
         imghsv =RegionFeature.get_hsvimg3f(img3u)
-        L,a,b = cv2.split(imglab)
-        H,S,V = cv2.split(imghsv)
-        imgchan = [R,G,B,L,a,b,H,S,V]
+        imgchan[3:6] = cv2.split(imglab) # L,a,b
+        imgchan[6:] = cv2.split(imghsv) # H,S,V
         for i in range(num_reg):
-            num_pix = len(rlist[i+1])
+            # fixed bug: change i+1 -> i, [j][2] -> [j][1], j[1] -> [j][0]
+            num_pix = len(rlist[i])
             for j in range(num_pix):
-                x = rlist[i+1][j][2]
-                y = rlist[i+1][j][1]
-                for k in range(9):
-                    raverval[i][k] += imgchan[k+1][x,y]
+                x = rlist[i][j][1]
+                y = rlist[i][j][0]
+                # fixed bug: [x,y] -> [y,x],  k+1 -> k
+                raverval[i, :] += imgchan[:, y,x]
             raverval[i] /= num_pix
         return raverval
 

@@ -63,10 +63,4 @@ class Super_Region():
                     index += 1
                 rlist[index_array[p]].append([y, x, ])
                 region[y, x] = index_array[p]
-        # if u need show im
-        # region = region.astype('float')
-        # region = region / np.max(region)
-        # cv2.imshow("Image", region)
-        # cv2.waitKey(0)
         return rlist
-
