@@ -55,8 +55,16 @@ class Super_Region():
         return rlist
 
     @staticmethod
-    def get_region_list(path="77.jpg", thresholds=0.1):
+    def get_region_list(path="77.jpg", thresholds=3.):
         im = Super_Region.guass_filter(path)
         region = Super_Region.get_region(im, thresholds)
         rlist = Super_Region.matrix2list(region)
+        region = region.astype('float')
+        region = region / np.max(region)
+        cv2.imshow("Image", region)
+        cv2.waitKey(0)
         return rlist
+
+if __name__ == "__main__":
+    Super_Region.get_region_list()
+    
