@@ -16,7 +16,7 @@ class RegionFeature():
     def get_hsvimg3f(img3u): #get hsv channel
         img3f = img3u/255.0
         hsvimg3f = np.zeros(img3f.shape)
-        cv2.cvtColor(img3f,hsvimg3f,cv2.CV_RGB2HSV)
+        cv2.cvtColor(img3f, hsvimg3f, cv2.CV_RGB2HSV)
         return hsvimg3f
 
     @staticmethod #@return value: numpy,the numberof regions by dimension of 9
@@ -24,7 +24,7 @@ class RegionFeature():
         num_reg = len(rlist)
         raverval = np.zeros((num_reg,9))
         # update: use np instead of list
-        imgchan = np.zeros( [9, img3u.shape[0], img3u.shape[1]] )
+        imgchan = np.zeros([9, img3u.shape[0], img3u.shape[1]])
         imgchan[0:3] = cv2.split(img3u) # B,G,R
         imglab = RegionFeature.get_labimg3f(img3u)
         imghsv =RegionFeature.get_hsvimg3f(img3u)
@@ -37,7 +37,7 @@ class RegionFeature():
                 x = rlist[i][j][1]
                 y = rlist[i][j][0]
                 # fixed bug: [x,y] -> [y,x],  k+1 -> k
-                raverval[i, :] += imgchan[:, y,x]
+                raverval[i, :] += imgchan[:, y, x]
             raverval[i] /= num_pix
         return raverval
 
