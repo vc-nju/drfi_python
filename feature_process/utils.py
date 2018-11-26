@@ -8,7 +8,7 @@ class Utils()
         self.rvar = self.get_varchannel()
         self.vartex,self.imtext1d = self.get_vartex()
         self.varlbp, self.lbp = self.get_varlbp()
-        self.w = w
+        self.w = self.get_w()
 
 
     def get_labimg3f(self):  # get lab channel
@@ -124,7 +124,7 @@ class Utils()
             varlbp[i] = np.sum((lbp[self.rlist[i]] - averlbp[i])**2)/num_pix
         return varlbp, 
         
-    def w(self):
+    def get_w(self):
         num_reg = len(self.rlist)
         pos = np.zeros([num_reg, 2])
         for i in range(num_reg):
