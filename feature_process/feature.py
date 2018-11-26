@@ -1,50 +1,54 @@
 import numpy as np
 import struct
 import cv2
-import math
-from skimage.feature import local_binary_pattern
+
 
 class RegionFeature():
     @staticmethod
-    def get_labimg3f(img3u): #get lab channel
+    def get_labimg3f(img3u):  # get lab channel
         img3f = img3u/255.0
         labimg3f = np.zeros(img3f.shape)
-        cv2.cvtColor(img3f,labimg3f,cv2.CV_RGB2Lab)
+        cv2.cvtColor(img3f, labimg3f, cv2.CV_RGB2Lab)
         return labimg3f
-    
+
     @staticmethod
-    def get_hsvimg3f(img3u): #get hsv channel
+    def get_hsvimg3f(img3u):  # get hsv channel
         img3f = img3u/255.0
         hsvimg3f = np.zeros(img3f.shape)
-        cv2.cvtColor(img3f,hsvimg3f,cv2.CV_RGB2HSV)
+        cv2.cvtColor(img3f, hsvimg3f, cv2.CV_RGB2HSV)
         return hsvimg3f
 
+    '''
+    return:
+        - coord: like [ sum_y/num_pix, sum_x/num_pix, tenth_y, tenth_x, ninth_y, ninth_x, ratio ]
+    '''
     @staticmethod
     def get_coord(rlist):
-	num_reg = len(rlist)
-	coord = np.zeros((num_reg,7))
-	for i in range(num_reg):
-	    sum_x = 0
-	    sum_y = 0
-	    num_pix = len(rlist[i])
-	    for j in range(rlist[i]):
-		sum_x += rlist[i][j][0]
-		sum_y += rlist[i][j][1]
-	    coord[i][0] = int(sum_x/num_pix)
-	    coord[i][1] = int(sum_y/num_pix)
-	    sortbyx = sorted(rlist[i],key = lambda x:x[1])
-	    sortbyy = sorted(rlist[i],key = lambda x:x[2])
-	    tenth = int(num_pix*0.1)
-	    ninth = int(num_pix*0.9)
-	    coord[i][2] = sortbyx[tenth][0]
-	    coord[i][3] = sortbyy[tenth][1]
-	    coord[i][4] = sortbyx[ninth][0]
-	    coord[i][5] = sortbyy[ninth][1]
-        ratio = (sortbyy[num_pix-1][1] - sortbyy4[0][1])/(sortbyx[num_pix-1][0] - sortbyx[0][0])
-        coord[i][6] = ratio
-	return coord
+        num_reg = len(rlist)
+        coord = np.zeros((num_reg, 7))
+        for i in range(num_reg):
+            # edit: remove for-loop
+            sum_y_x = np.sum(np.array(rlist[i], dtype=np.int32))
+            num_pix = len(rlist[i])
+            coord[i][0:2] = sum_y_x//num_pix
+            sortbyx = [_x for _x in sorted(rlist[i], key=lambda x: x[1])]
+            sortbyy = [_y for _y in sorted(rlist[i], key=lambda x: x[0])]
+            tenth = int(num_pix*0.1)
+            ninetith = int(num_pix*0.9)
+            coord[i][2:6] = [sortbyy[tenth], sortbyx[tenth],
+	            sortbyy[ninetith], sortbyx[ninetith]]
+            ratio = float(sortbyy[-1] - sortbyy[0]) / float(sortbyx[-1] - sortbyx[0])
+            coord[i][6] = ratio
+        return coord
 
-    @staticmethod #@return value: numpy,the numberof regions by dimension of 9
+    '''
+    return:
+        - rvar: like @return value: [
+            [variance value of r, g, b, l, a, b, h, s, v in super_region1],
+            [variance value of r, g, b, l, a, b, h, s, v in super_region2],
+            ...]
+    '''
+    @staticmethod #
     def get_varchannel(rlist,img3u): #get average and variance value of rgb,lab and hsv in each region
         num_reg = len(rlist)
         raver = np.zeros((num_reg,9))
@@ -54,42 +58,14 @@ class RegionFeature():
         imghsv =RegionFeature.get_hsvimg3f(img3u)
         L,a,b = cv2.split(imglab)
         H,S,V = cv2.split(imghsv)
-        #imgchan = [R,G,B,L,a,b,H,S,V]
-	    imgchan = np.zeros([B.shape[0],B.shape[1],9])
+        # imgchan = [R,G,B,L,a,b,H,S,V]
+        imgchan = np.append([R,G,B,L,a,b,H,S,V], axis=2)
         for i in range(num_reg):
             num_pix = len(rlist[i])
-            for j in range(num_pix):
-                x = rlist[i][j][0]
-                y = rlist[i][j][1]
-                for k in range(9):
-                    raver[i][k] += imgchan[x,y,k]
-            raver[i] /= num_pix
-            for k in range(9):
-                rvar[i][k] += (imgchan[x,y,k] - raver[i][k])**2
-            rvar[i][k] /= num_pix
+            raver[i, :] = np.sum(imchan[rlist[i]], axis=1) / num_pix
+            rvar[i, :] = np.sum((imgchan[rlist[i]] - raver[i,:])**2 ,axis=1)/num_pix
         return rvar
-'''
-    @staticmethod
-    def get_varval(rlist,img3u): #get variance value of rgb,lab and hsv in each region
-        num_reg = len(rlist)
-        B,G,R = cv2.split(img3u)
-        imglab = RegionFeature.get_labimg3f(img3u)
-        imghsv = RegionFeature.get_hsvimg3f(img3u)
-        L,a,b = cv2.split(imglab)
-        H,S,V = cv2.split(imghsv)
-        raverval = RegionFeature.get_averval(rlist,img3u)
-        rvarval = np.zeros((num_reg,9))
-	    imgchan = np.zeros([B.shape[0],B.shape[1],9])
-        for i in range(num_reg):
-            num_pix = len(rlist[i+1])
-            for j in range(num_pix):
-                x = rlist[i+1][j+1][1]
-                y = rlist[i+1][j+1][2]
-                for k in range(9):
-                    rvarval[i][k] += (imgchan[x,y,k] - raverval[i][k])**2
-            rvarval[i] /= num_pix
-        return rvarval
-'''
+
     @staticmethod
     def matread(file): #according to drfi_cpp realization,we need to get the parameter from one specific file
         info_name = file.read(5)
@@ -161,8 +137,8 @@ class RegionFeature():
         radius = 1
         METHOD = 'uniform'
         lbp = local_binary_pattern(img3u,n_points,radius,METHOD) #the lbp map of original picture
-        #n_bins = int(lbp.max() + 1)
-        #hist,_ = np.histogram(lbp,density=true,bins=n_bins,range=(0,n_bins))
+        # n_bins = int(lbp.max() + 1)
+        # hist,_ = np.histogram(lbp,density=true,bins=n_bins,range=(0,n_bins))
         for i in range(num_reg):
             num_pix = len(rlist[i])
             for j in range(num_pix):

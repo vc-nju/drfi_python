@@ -39,13 +39,11 @@ class Super_Region():
     This method will return a List which contains all super_regions.
     args:
         - path: the img's path. like: "../data/77.pnd"
-        - c : the thresholds: like: 166.
+        - c: the thresholds: like: 166.
     return:
-        - rlist = [
-                [[1,2], [2,3], ...], # points in super_region0
-                [[3,4] ...], # points in super_region1
-                ...
-            ]
+        -rlist = [[[1, 2], [2, 3], ...],  # points in super_region0
+                  [[3, 4] ...],  # points in super_region1
+                  ...]
     '''
     @staticmethod
     def get_region(path, c):
@@ -67,7 +65,6 @@ class Super_Region():
         index = 0
         # use index_array to map the p to index
         index_array = np.ones(im_size, dtype=np.int32)*-1
-        region = np.zeros(im.shape[0:2], dtype=np.int32)
         for y in range(im.shape[0]):
             for x in range(im.shape[1]):
                 p = u.find(y * im.shape[0] + x)
@@ -75,13 +72,7 @@ class Super_Region():
                     index_array[p] = index
                     rlist.append([])
                     index += 1
-                rlist[index_array[p]].append([y, x, ])
-                region[y, x] = index_array[p]
-        region = region.astype('float')
-        region = region / np.max(region)
-        cv2.imshow("Image", region)
-        cv2.waitKey(0)
+                rlist[index_array[p]].append((y, x,))
         return rlist
 
-if __name__ == "__main__":
-    Super_Region.get_region("../data/77.jpg",166.)
+
