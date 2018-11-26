@@ -4,11 +4,10 @@ class Utils()
         self.rlist = rlist
         self.labimg3f = self.get_labimg3f()
         self.hsvimg3f = self.get_hsvimg3f()
-        self.mlFilters15d = self.lmfilkernal()
         self.coord = self.get_coord()
         self.rvar = self.get_varchannel()
-        self.vartex = self.get_vartex()
-        self.varlbp = self.get_varlbp()
+        self.vartex,self.imtext1d = self.get_vartex()
+        self.varlbp, self.lbp = self.get_varlbp()
 
 
     def get_labimg3f(self):  # get lab channel
@@ -69,23 +68,23 @@ class Utils()
         mat.reshape((headData[0], headData[1], headData[2]))
         return mat
 
-    def lmfilkernal(self,file="DrfiModel.data"):
+    def mlfilkernal(self,file="DrfiModel.data"):
         with open(file, 'rb') as f:
                 file_name = f.read(9)
                 _N = np.zeros(3) #_N,_NumN,_NumT,according to drfi_cpp realization
                 for i in range(3):
                     number = struct.unpack('i', f.read(4))
                     _N[i] = number
-                w = RegionFeature.matread(f)
-                _segPara1d = RegionFeature.matread(f)
-                _lDau1i = RegionFeature.matread(f)
-                _rDau1i = RegionFeature.matread(f)
-                _mBest1i = RegionFeature.matread(f)
-                _nodeStatus1c = RegionFeature.matread(f)
-                _upper1d = RegionFeature.matread(f)
-                _avNode1d = RegionFeature.matread(f)
-                _mlFilters15d = RegionFeature.matread(f)
-                ndTree = RegionFeature.matread(f)
+                w = self.matread(f)
+                _segPara1d = self.matread(f)
+                _lDau1i = self.matread(f)
+                _rDau1i = self.matread(f)
+                _mBest1i = self.matread(f)
+                _nodeStatus1c = self.matread(f)
+                _upper1d = self.matread(f)
+                _avNode1d = self.matread(f)
+                _mlFilters15d = self.matread(f)
+                ndTree = self.matread(f)
         return _mlFilters15d #LM filters,the most important parameter of texture filter response
 
     def get_vartex(self): #the average value of texture filter response
@@ -104,7 +103,7 @@ class Utils()
             imtext1ds = imtext1d[self.rlist[i]]
             avertex[i] = np.sum(imtext1ds, axis=1)/len(self.rlist[i])
             vartex[i] = np.sum((imtext1ds - avertex)**2, axis=1)/len(self.rlist[i])
-        return vartex
+        return vartex,imtext1d
 
     def get_varlbp(self): #get the variance value of lbp feature in each region
         num_reg = len(self.rlist)
@@ -120,14 +119,6 @@ class Utils()
         # hist,_ = np.histogram(lbp,density=true,bins=n_bins,range=(0,n_bins))
         for i in range(num_reg):
             num_pix = len(self.rlist[i])
-            for j in range(num_pix):
-                x = self.rlist[i][j][0]
-                y = self.rlist[i][j][1]
-                averlbp[i] += lbp[x][y]
-            averlbp[i] /= num_pix
-            for j in range(num_pix):
-                x = self.rlist[i][j][0]
-                y = self.rlist[i][j][1]
-                varlbp[i] += (lbp[x][y] - averlbp)**2
-            varlbp[i] /= num_pix
-        return varlbp
+            averlbp[i] = np.sum(lbp[self.rlist[i]])/num_pix
+            varlbp[i] = np.sum((lbp[self.rlist[i]] - averlbp[i])**2)/num_pix
+        return varlbp, lbp
