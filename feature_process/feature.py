@@ -35,57 +35,57 @@ class RegionFeature():
             sortbyy = [_y for _y in sorted(rlist[i], key=lambda x: x[0])]
             tenth = int(num_pix*0.1)
             ninetith = int(num_pix*0.9)
-            coord[i][2:6] = [sortbyy[tenth], sortbyx[tenth],
-	            sortbyy[ninetith], sortbyx[ninetith]]
+            coord[i][2:6] = [sortbyy[tenth], sortbyx[tenth], sortbyy[ninetith], sortbyx[ninetith]]
             ratio = float(sortbyy[-1] - sortbyy[0]) / float(sortbyx[-1] - sortbyx[0])
             coord[i][6] = ratio
         return coord
 
     '''
     return:
-        - rvar: like @return value: [
+        - rvar: like[
             [variance value of r, g, b, l, a, b, h, s, v in super_region1],
             [variance value of r, g, b, l, a, b, h, s, v in super_region2],
             ...]
     '''
-    @staticmethod #
-    def get_varchannel(rlist,img3u): #get average and variance value of rgb,lab and hsv in each region
+    @staticmethod
+    def get_varchannel(rlist, img3u): #get average and variance value of rgb,lab and hsv in each region
         num_reg = len(rlist)
-        raver = np.zeros((num_reg,9))
-        rvar = np.zeros((num_reg,9))
-        B,G,R = cv2.split(img3u)
+        raver = np.zeros((num_reg, 9))
+        rvar = np.zeros((num_reg, 9))
+        B, G, R = cv2.split(img3u)
         imglab = RegionFeature.get_labimg3f(img3u)
-        imghsv =RegionFeature.get_hsvimg3f(img3u)
-        L,a,b = cv2.split(imglab)
-        H,S,V = cv2.split(imghsv)
+        imghsv = RegionFeature.get_hsvimg3f(img3u)
+        L, a, b = cv2.split(imglab)
+        H, S, V = cv2.split(imghsv)
         # imgchan = [R,G,B,L,a,b,H,S,V]
-        imgchan = np.append([R,G,B,L,a,b,H,S,V], axis=2)
+        imgchan = np.append([R, G, B, L, a, b, H, S, V], axis=2)
         for i in range(num_reg):
             num_pix = len(rlist[i])
             raver[i, :] = np.sum(imchan[rlist[i]], axis=1) / num_pix
             rvar[i, :] = np.sum((imgchan[rlist[i]] - raver[i,:])**2 ,axis=1)/num_pix
         return rvar
 
+    
     @staticmethod
-    def matread(file): #according to drfi_cpp realization,we need to get the parameter from one specific file
+    def matread(file):
         info_name = file.read(5)
-        headData = np.zeros(3)
+        headData = np.zeros(3, dtype=int32)
         for i in range(3):
-            headData[i] = struct.unpack('i',file.read(4))
+            headData[i] = struct.unpack('i', file.read(4))
         total = headData[0]*headData[1]*headData[2]
-        mat = np.array(total,np.int8)
+        mat = np.zeros(total, dtype=np.int8)
         for i in range(total):
             mat[i] = file.read(1)
-        mat.reshape((headData[0],headData[1],headData[2]))
+        mat.reshape((headData[0], headData[1], headData[2]))
         return mat
 
     @staticmethod
     def lmfilkernal(file="DrfiModel.data"):
-        with open(file,'rb') as f:
+        with open(file, 'rb') as f:
                 file_name = f.read(9)
                 _N = np.zeros(3) #_N,_NumN,_NumT,according to drfi_cpp realization
                 for i in range(3):
-                    number = struct.unpack('i',f.read(4))
+                    number = struct.unpack('i', f.read(4))
                     _N[i] = number
                 w = RegionFeature.matread(f)
                 _segPara1d = RegionFeature.matread(f)
@@ -100,43 +100,35 @@ class RegionFeature():
         return _mlFilters15d #LM filters,the most important parameter of texture filter response
 
     @staticmethod
-    def get_vartex(rlist,img3u): #the average value of texture filter response
+    def get_vartex(rlist, img3u): #the average value of texture filter response
         num_reg = len(rlist)
-        avertex = np.zeros((num_reg,15))
-        vartex = np.zeros((num_reg,15))
+        avertex = np.zeros([num_reg, 15])
+        vartex = np.zeros([num_reg, 15])
         mlFilters15d = RegionFeature.lmfilkernal()
-        gray1u = np.zeros((img3u.shape[0],img3u.shape[1]),np.int8)
-        gray1d = np.zeros((img3u.shape[0],img3u.shape[1]),np.int8)
-        cv2.cvtColor(img3u,gray1u,cv2.RGB2GRAY)
-        gray1d = gray1u/255.0
-        gray1d.astype(np.float64)
-        imtext1d = np.zeros((gray1d.shape[0],gray1d.shape[1],15),np.float64)
-        for i in range(15): #mlFilters15d is the convolution kernal of LM filters mentioned in the paper
-            cv2.filter2D(gray1d,imtext1d[:,:,i],cv2.CV_F64,mlFilters15d[:,:,i],(0,0),0.0,cv2.BORDER_REPLICATE)
-            for j in range(num_reg):
-                for k in range(len(rlist[j])):
-                    x = rlist[j][k][0]
-                    y = rlist[j][k][1]
-                    avertex[j][i] += imtext1d[x,y,i]
-                avertex[j][i] /= len(rlist[j])
-                for m in range(len(rlist[j])):
-                    x = rlist[j][k][0]
-                    y = rlist[j][k][1]
-                    vartex[j][i] += (imtext1d[x,y,i] - avertex[j][i])**2
-                vartex[j][i] /= len(rlist[j])
-        return vartex 
+        gray1u = np.zeros([img3u.shape[0], img3u.shape[1]], dtype=np.int8)
+        gray1d = np.zeros([img3u.shape[0], img3u.shape[1]], dtype=np.float)
+        cv2.cvtColor(img3u, gray1u, cv2.RGB2GRAY)
+        gray1d = gray1u.astype(np.float) / 255.0
+        imtext1d = np.zeros([gray1d.shape[0], gray1d.shape[1], 15])
+        #mlFilters15d is the convolution kernal of LM filters mentioned in the paper
+        cv2.filter2D(gray1d, imtext1d[:, :, i], cv2.CV_F64, mlFilters15d[:, :, i], (0, 0), 0.0, cv2.BORDER_REPLICATE)
+        for i in range(num_reg):
+            imtext1ds = imtext1d[rlist[i]]
+            avertex[i] = np.sum(imtext1ds, axis=1)/len(rlist[i])
+            vartex[i] = np.sum((imtext1ds - avertex)**2, axis=1)/len(rlist[i])
+        return vartex
             
     @staticmethod
-    def get_varlbp(rlist,img3u): #get the variance value of lbp feature in each region
+    def get_varlbp(rlist, img3u): #get the variance value of lbp feature in each region
         num_reg = len(rlist)
         varlbp = np.zeros(num_reg)
         averlbp = np.zeros(num_reg)
-        gray1u = np.zeros((img3u.shape[0],img3u.shape[1]),np.int8)
-        cv2.cvtColor(img3u,gray1u,cv2.RGB2GRAY)
+        gray1u = np.zeros((img3u.shape[0], img3u.shape[1]), np.int8)
+        cv2.cvtColor(img3u, gray1u, cv2.RGB2GRAY)
         n_points = 8
         radius = 1
         METHOD = 'uniform'
-        lbp = local_binary_pattern(img3u,n_points,radius,METHOD) #the lbp map of original picture
+        lbp = local_binary_pattern(img3u, n_points, radius,METHOD) #the lbp map of original picture
         # n_bins = int(lbp.max() + 1)
         # hist,_ = np.histogram(lbp,density=true,bins=n_bins,range=(0,n_bins))
         for i in range(num_reg):
