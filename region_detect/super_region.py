@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from .utils import Edge, Universe
+from utils import Edge, Universe
 
 
 class Super_Region():
@@ -77,4 +77,11 @@ class Super_Region():
                     index += 1
                 rlist[index_array[p]].append([y, x, ])
                 region[y, x] = index_array[p]
+        region = region.astype('float')
+        region = region / np.max(region)
+        cv2.imshow("Image", region)
+        cv2.waitKey(0)
         return rlist
+
+if __name__ == "__main__":
+    Super_Region.get_region("../data/77.jpg",166.)

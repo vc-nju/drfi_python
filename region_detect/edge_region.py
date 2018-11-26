@@ -5,8 +5,8 @@ from matplotlib import pyplot as plt
 
 class Super_Region():
     @staticmethod
-    def guass_filter(path="77.jpg"):
-        im = cv2.imread("77.jpg")
+    def guass_filter(path):
+        im = cv2.imread(path)
         kernel = np.ones((5, 5), np.float32)/25
         dst = cv2.filter2D(im, -1, kernel)
         dst = cv2.filter2D(dst, -1, kernel)
@@ -27,7 +27,7 @@ class Super_Region():
         return edges
 
     @staticmethod
-    def get_region(im, thresholds=0.1):
+    def get_region(im, thresholds):
         edges = Super_Region.get_edges(im)
         min_edges = np.min(edges, axis=0)
         directions = np.argmin(edges, axis=0)
@@ -55,7 +55,7 @@ class Super_Region():
         return rlist
 
     @staticmethod
-    def get_region_list(path="77.jpg", thresholds=3.):
+    def get_region_list(path, thresholds):
         im = Super_Region.guass_filter(path)
         region = Super_Region.get_region(im, thresholds)
         rlist = Super_Region.matrix2list(region)

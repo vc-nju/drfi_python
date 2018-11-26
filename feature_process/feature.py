@@ -16,31 +16,59 @@ class RegionFeature():
     def get_hsvimg3f(img3u): #get hsv channel
         img3f = img3u/255.0
         hsvimg3f = np.zeros(img3f.shape)
-        cv2.cvtColor(img3f, hsvimg3f, cv2.CV_RGB2HSV)
+        cv2.cvtColor(img3f,hsvimg3f,cv2.CV_RGB2HSV)
         return hsvimg3f
 
+    @staticmethod
+    def get_coord(rlist):
+	num_reg = len(rlist)
+	coord = np.zeros((num_reg,7))
+	for i in range(num_reg):
+	    sum_x = 0
+	    sum_y = 0
+	    num_pix = len(rlist[i])
+	    for j in range(rlist[i]):
+		sum_x += rlist[i][j][0]
+		sum_y += rlist[i][j][1]
+	    coord[i][0] = int(sum_x/num_pix)
+	    coord[i][1] = int(sum_y/num_pix)
+	    sortbyx = sorted(rlist[i],key = lambda x:x[1])
+	    sortbyy = sorted(rlist[i],key = lambda x:x[2])
+	    tenth = int(num_pix*0.1)
+	    ninth = int(num_pix*0.9)
+	    coord[i][2] = sortbyx[tenth][0]
+	    coord[i][3] = sortbyy[tenth][1]
+	    coord[i][4] = sortbyx[ninth][0]
+	    coord[i][5] = sortbyy[ninth][1]
+        ratio = (sortbyy[num_pix-1][1] - sortbyy4[0][1])/(sortbyx[num_pix-1][0] - sortbyx[0][0])
+        coord[i][6] = ratio
+	return coord
+
     @staticmethod #@return value: numpy,the numberof regions by dimension of 9
-    def get_averval(rlist,img3u): #get average value of rgb,lab and hsv in each region
+    def get_varchannel(rlist,img3u): #get average and variance value of rgb,lab and hsv in each region
         num_reg = len(rlist)
-        raverval = np.zeros((num_reg,9))
-        # update: use np instead of list
-        imgchan = np.zeros([9, img3u.shape[0], img3u.shape[1]])
-        imgchan[0:3] = cv2.split(img3u) # B,G,R
+        raver = np.zeros((num_reg,9))
+        rvar = np.zeros((num_reg,9))
+        B,G,R = cv2.split(img3u)
         imglab = RegionFeature.get_labimg3f(img3u)
         imghsv =RegionFeature.get_hsvimg3f(img3u)
-        imgchan[3:6] = cv2.split(imglab) # L,a,b
-        imgchan[6:] = cv2.split(imghsv) # H,S,V
+        L,a,b = cv2.split(imglab)
+        H,S,V = cv2.split(imghsv)
+        #imgchan = [R,G,B,L,a,b,H,S,V]
+	    imgchan = np.zeros([B.shape[0],B.shape[1],9])
         for i in range(num_reg):
-            # fixed bug: change i+1 -> i, [j][2] -> [j][1], j[1] -> [j][0]
             num_pix = len(rlist[i])
             for j in range(num_pix):
-                x = rlist[i][j][1]
-                y = rlist[i][j][0]
-                # fixed bug: [x,y] -> [y,x],  k+1 -> k
-                raverval[i, :] += imgchan[:, y, x]
-            raverval[i] /= num_pix
-        return raverval
-
+                x = rlist[i][j][0]
+                y = rlist[i][j][1]
+                for k in range(9):
+                    raver[i][k] += imgchan[x,y,k]
+            raver[i] /= num_pix
+            for k in range(9):
+                rvar[i][k] += (imgchan[x,y,k] - raver[i][k])**2
+            rvar[i][k] /= num_pix
+        return rvar
+'''
     @staticmethod
     def get_varval(rlist,img3u): #get variance value of rgb,lab and hsv in each region
         num_reg = len(rlist)
@@ -51,19 +79,19 @@ class RegionFeature():
         H,S,V = cv2.split(imghsv)
         raverval = RegionFeature.get_averval(rlist,img3u)
         rvarval = np.zeros((num_reg,9))
-        imgchan = [R,G,B,L,a,b,H,S,V]
+	    imgchan = np.zeros([B.shape[0],B.shape[1],9])
         for i in range(num_reg):
             num_pix = len(rlist[i+1])
             for j in range(num_pix):
-                x = rlist[i+1][j][2]
-                y = rlist[i+1][j][1]
+                x = rlist[i+1][j+1][1]
+                y = rlist[i+1][j+1][2]
                 for k in range(9):
-                    rvarval[i][k] += (imgchan[k+1][x,y] - raverval[i][k])**2
+                    rvarval[i][k] += (imgchan[x,y,k] - raverval[i][k])**2
             rvarval[i] /= num_pix
         return rvarval
-
+'''
     @staticmethod
-    def matread(file):
+    def matread(file): #according to drfi_cpp realization,we need to get the parameter from one specific file
         info_name = file.read(5)
         headData = np.zeros(3)
         for i in range(3):
@@ -79,7 +107,7 @@ class RegionFeature():
     def lmfilkernal(file="DrfiModel.data"):
         with open(file,'rb') as f:
                 file_name = f.read(9)
-                _N = np.zeros(3) #_N,_NumN,_NumT
+                _N = np.zeros(3) #_N,_NumN,_NumT,according to drfi_cpp realization
                 for i in range(3):
                     number = struct.unpack('i',f.read(4))
                     _N[i] = number
@@ -93,7 +121,7 @@ class RegionFeature():
                 _avNode1d = RegionFeature.matread(f)
                 _mlFilters15d = RegionFeature.matread(f)
                 ndTree = RegionFeature.matread(f)
-        return _mlFilters15d
+        return _mlFilters15d #LM filters,the most important parameter of texture filter response
 
     @staticmethod
     def get_vartex(rlist,img3u): #the average value of texture filter response
@@ -111,12 +139,12 @@ class RegionFeature():
             cv2.filter2D(gray1d,imtext1d[:,:,i],cv2.CV_F64,mlFilters15d[:,:,i],(0,0),0.0,cv2.BORDER_REPLICATE)
             for j in range(num_reg):
                 for k in range(len(rlist[j])):
-                    x = rlist[j][k][2]
+                    x = rlist[j][k][0]
                     y = rlist[j][k][1]
                     avertex[j][i] += imtext1d[x,y,i]
                 avertex[j][i] /= len(rlist[j])
                 for m in range(len(rlist[j])):
-                    x = rlist[j][k][2]
+                    x = rlist[j][k][0]
                     y = rlist[j][k][1]
                     vartex[j][i] += (imtext1d[x,y,i] - avertex[j][i])**2
                 vartex[j][i] /= len(rlist[j])
@@ -138,13 +166,13 @@ class RegionFeature():
         for i in range(num_reg):
             num_pix = len(rlist[i])
             for j in range(num_pix):
-                y = rlist[i+1][j+1][1]
-                x = rlist[i+1][j+1][2]
+                x = rlist[i][j][0]
+                y = rlist[i][j][1]
                 averlbp[i] += lbp[x][y]
             averlbp[i] /= num_pix
             for j in range(num_pix):
-                y = rlist[i+1][j+1][1]
-                x = rlist[i+1][j+1][2]
+                x = rlist[i][j][0]
+                y = rlist[i][j][1]
                 varlbp[i] += (lbp[x][y] - averlbp)**2
             varlbp[i] /= num_pix
         return varlbp
@@ -153,8 +181,7 @@ class RegionFeature():
     def get_regprop(rlist,matrix,im): #property descriptor
         num_reg = len(rlist)
         regprop = np.zeros((num_reg,35),np.float32)
-        raverval = RegionFeature.get_averval(rlist,im)
-        rvarval = RegionFeature.get_varval(rlist,im)
+        rvarval = RegionFeature.get_varchannel(rlist,im)
         B,G,R = cv2.split(im)
         for i in range(num_reg):
             num_pix = len(rlist[i])
@@ -162,28 +189,16 @@ class RegionFeature():
             sum_x = 0
             edge_num = 0
             for j in range(num_pix):
-                x = rlist[i][j][2]
+                x = rlist[i][j][0]
                 y = rlist[i][j][1]
-                sum_x += x
-                sum_y += y
                 if matrix[x,y]!=matrix[x-1,y] or matrix[x,y]!=matrix[x+1,y] or matrix[x,y]!=matrix[x,y-1] or matrix[x,y]!=matrix[x,y+1]:
                     edge_num += 1
-            regprop[i][0] = sum_x / num_pix #average x
-            regprop[i][1] = sum_y / num_pix #average y
-            temp = sorted(rlist[i],key = lambda x:x[1])
-            ten_x = (int)(num_pix*0.1)
-            nin_x = (int)(num_pix*0.9)
-            regprop[i][2] = temp[ten_x][2] #10th-point x 
-            regprop[i][4] = temp[nin_x][2]
-            _temp = sorted(rlist[i],key = lambda x:x[0])
-            ten_y = (int)(num_pix*0.1)
-            nin_y = (int)(num_pix*0.9)
-            regprop[i][3] = temp[ten_x][1]
-            regprop[i][5] = temp[nin_x][1]
+            coord = RegionFeature.get_coord(rlist)
+            for j in range(6):
+                regprop[i][j] = coord[i][j]
             regprop[i][6] = edge_num #perimeter
             regprop[i][33] = num_pix #area
-            ratio = (temp[num_pix][2] - temp[1][2]) / (_temp[num_pix][1] - _temp[1][1])
-            regprop[i][7] = ratio #length-width ratio
+            regprop[i][7] = coord[i][6] #length-width ratio
             for k in range(9):
                 regprop[i][k+8] = rvarval[i][k] #the variance of different channel
             vartex = RegionFeature.get_vartex(rlist,im)
@@ -198,7 +213,7 @@ class RegionFeature():
             y = regprop[i][1]
             for j in range(num_reg):
                 _x = regprop[j][0]
-                _y = regprop[i][1]
+                _y = regprop[j][1]
                 neigharea[i] += math.exp(-((x - _x)**2 + (y - _y)**2)/sigmadist)
         return regprop
 
