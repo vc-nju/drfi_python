@@ -74,5 +74,3 @@ class Super_Region():
                     index += 1
                 rlist[index_array[p]].append((y, x,))
         return rlist
-
-

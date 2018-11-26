@@ -64,7 +64,3 @@ class Super_Region():
         cv2.imshow("Image", region)
         cv2.waitKey(0)
         return rlist
-
-if __name__ == "__main__":
-    Super_Region.get_region_list()
-    
