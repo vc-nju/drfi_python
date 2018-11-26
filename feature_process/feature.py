@@ -5,47 +5,40 @@ from .utils import Utils
 
 
 class RegionFeature():
-    def __init__(self,img3u,rlist,matrix):
-        self._utils = Utils(img3u,rlist)
-        self.regprop = self.get_regprop(matrix)
+    def __init__(self, rgb, rlist, rmat):
+        self.rgb = rgb
+        self.rlist = rlist
+        self.utils = Utils(rgb, rlist, rmat)
+        self.reg_features = self.get_region_features()
 
-    def get_regprop(self): #property descriptor
+    def get_region_features(self): #property descriptor
         num_reg = len(self.rlist)
-        regprop = np.zeros((num_reg,35),np.float32)
-        rvarval = self._utils.rvar
-        B,G,R = cv2.split(self.img3u)
-        for i in range(num_reg):
-            num_pix = len(self.rlist[i])
-            sum_y = 0
-            sum_x = 0
-            edge_num = 0
-            for j in range(num_pix):
-                x = self.rlist[i][j][0]
-                y = self.rlist[i][j][1]
-                if self.matrix[x,y]!=self.matrix[x-1,y] or self.matrix[x,y]!=self.matrix[x+1,y] or self.matrix[x,y]!=self.matrix[x,y-1] or self.matrix[x,y]!=self.matrix[x,y+1]:
-                    edge_num += 1
-            coord = self._utils.coord
-            for j in range(6):
-                regprop[i][j] = coord[i][j]
-            regprop[i][6] = edge_num #perimeter
-            regprop[i][33] = num_pix #area
-            regprop[i][7] = coord[i][6] #length-width ratio
-            for k in range(9):
-                regprop[i][k+8] = rvarval[i][k] #the variance of different channel
-            vartex = self._utils.vartex
-            for k in range(15):
-                regprop[i][k+17] = vartex[i][k] #the variance of lm-filters
-            varlbp = self._utils.varlbp
-            regprop[i][32] = varlbp[i]
-        neigharea = np.zeros(num_reg)
-        sigmadist = 0.4
-        for i in range(num_reg):
-            x = regprop[i][0]
-            y = regprop[i][1]
-            for j in range(num_reg):
-                _x = regprop[j][0]
-                _y = regprop[j][1]
-                neigharea[i] += math.exp(-((x - _x)**2 + (y - _y)**2)/sigmadist)
-        return regprop
+        reg_features = np.zeros([num_reg, 35])
+        reg_features[:, 0:6] = self.utils.coord[0:6]
+        reg_features[:, 6] = self.utils.edge_nums
+        reg_features[:, 7] = self.utils.coord[7]
+        reg_features[:, 8:17] = self.utils.color_var
+        reg_features[:, 17:32] = self.utils.tex_var
+        reg_features[:, 32] = self.utils.lbp_var
+        reg_features[:, 33] = self.utils.a
+        reg_features[:, 34] = self.utils.neigh_areas
+        reg_min = np.min(reg_features)
+        reg_max = np.max(reg_features)
+        reg_features = (reg_features - reg_min) / (reg_max - reg_min)
+        return reg_features
 
-            
+    def get_contrast_features(self):
+        num_reg = len(self.rlist)
+        con_features = np.zeros([num_reg, 29])
+        dot = self.utils.dot
+        for i in range(9):
+            con_features[:, i] = dot(self.utils.color_avg[:, i])
+        con_features[:, 9] = dot(self.rgb, hist=True)
+        con_features[:, 10] = dot(self.utils.hsv, hist=True)
+        con_features[:, 11] = dot(self.utils.lab, hist=True)
+        for i in range(15):
+            con_features[:, i+12] = dot(self.utils.tex_avg[:, i])
+        con_features[:, 27] = dot(self.utils.tex, hist=True)
+        con_features[:, 11] = dot(self.utils.lbp, hist=True)
+        return con_features
+

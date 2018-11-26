@@ -1,33 +1,31 @@
 class Utils()
-    def __init__(self, img3u, rlist):
-        self.img3u = img3u
+   def __init__(self, rgb, rlist, rmat):
+        self.rgb = rgb
         self.rlist = rlist
-        self.labimg3f = self.get_labimg3f()
-        self.hsvimg3f = self.get_hsvimg3f()
+        self.rmat = rmat
+        self.lab = self.get_lab()
+        self.hsv = self.get_hsv()
         self.coord = self.get_coord()
-        self.rvar = self.get_varchannel()
-        self.vartex,self.imtext1d = self.get_vartex()
-        self.varlbp, self.lbp = self.get_varlbp()
+        self.color_var, self.color_avg = self.get_color_var()
+        self.tex_var, self.tex_avg, self.tex = self.get_tex_var()
+        self.lbp_var, self.lbp = self.get_lbp_var()
+        self.edge_nums = self.get_edge_nums()
+        self.neigh_areas = self.get_neigh_areas()
         self.w = self.get_w()
+        self.a = [ len(r) for r in rlist]
 
+    def get_lab(self):
+        lab = cv2.cvtColor(self.rgb, cv2.CV_RGB2Lab)
+        return lab
 
-    def get_labimg3f(self):  # get lab channel
-        img3f = self.img3u/255.0
-        labimg3f = np.zeros(img3f.shape)
-        cv2.cvtColor(img3f, labimg3f, cv2.CV_RGB2Lab)
-        return labimg3f
-
-    def get_hsvimg3f(self):  # get hsv channel
-        img3f = self.img3u/255.0
-        hsvimg3f = np.zeros(img3f.shape)
-        cv2.cvtColor(img3f, hsvimg3f, cv2.CV_RGB2HSV)
-        return hsvimg3f
+    def get_hsv(self):
+        hsv = cv2.cvtColor(self.rgb, cv2.CV_RGB2HSV)
+        return hsv
 
     def get_coord(self):
         num_reg = len(self.rlist)
-        coord = np.zeros((num_reg, 7))
+        coord = np.zeros([num_reg, 7])
         for i in range(num_reg):
-            # edit: remove for-loop
             sum_y_x = np.sum(np.array(self.rlist[i], dtype=np.int32))
             num_pix = len(self.rlist[i])
             coord[i][0:2] = sum_y_x//num_pix
@@ -35,29 +33,84 @@ class Utils()
             sortbyy = [_y for _y in sorted(self.rlist[i], key=lambda x: x[0])]
             tenth = int(num_pix*0.1)
             ninetith = int(num_pix*0.9)
-            coord[i][2:6] = [sortbyy[tenth], sortbyx[tenth], sortbyy[ninetith], sortbyx[ninetith]]
-            ratio = float(sortbyy[-1] - sortbyy[0]) / float(sortbyx[-1] - sortbyx[0])
+            coord[i][2:6] = [sortbyy[tenth], sortbyx[tenth],
+                sortbyy[ninetith], sortbyx[ninetith]]
+            ratio = float(sortbyy[-1] - sortbyy[0]) / \
+                          float(sortbyx[-1] - sortbyx[0])
             coord[i][6] = ratio
         return coord
 
-    def get_varchannel(self): #get average and variance value of rgb,lab and hsv in each region
+    def get_color_var(self):
         num_reg = len(self.rlist)
-        raver = np.zeros((num_reg, 9))
-        rvar = np.zeros((num_reg, 9))
-        B, G, R = cv2.split(self.img3u)
-        #imglab = RegionFeature.get_labimg3f(img3u)
-        #imghsv = RegionFeature.get_hsvimg3f(img3u)
-        L, a, b = cv2.split(self.imglab3f)
-        H, S, V = cv2.split(self.imghsv3f)
-        # imgchan = [R,G,B,L,a,b,H,S,V]
-        imgchan = np.append([R, G, B, L, a, b, H, S, V], axis=2)
+        avg = np.zeros([num_reg, 9])
+        var = np.zeros([num_reg, 9])
+        imgchan = np.append([self.rgb, self.lab, self.hsv], axis=2)
         for i in range(num_reg):
             num_pix = len(self.rlist[i])
-            raver[i, :] = np.sum(imchan[self.rlist[i]], axis=1) / num_pix
-            rvar[i, :] = np.sum((imgchan[self.rlist[i]] - raver[i,:])**2 ,axis=1)/num_pix
-        return rvar
+            avg[i, :] = np.sum(imchan[self.rlist[i]]) / num_pix
+            var[i, :] = np.sum((imgchan[self.rlist[i]] - avg[i, :])**2 ,axis=0)/num_pix
+        return var, avg
 
-    def matread(self,file):
+    def get_tex_var(self):
+        num_reg = len(self.rlist)
+        avg = np.zeros([num_reg, 15])
+        var = np.zeros([num_reg, 15])
+        lm_fiters = self.lm_kernal()
+        gray = cv2.cvtColor(self.rgb, cv2.RGB2GRAY)
+        gray = gray.astype(np.float) / 255.0
+        tex = np.zeros([gray.shape[0], gray.shape[1], 15])
+        for i in range(len(lm_fiters)):
+            tex[:, :, i] = cv2.filter2D(gray, cv2.CV_F64, lm_fiters[:, :, i], (0, 0), 0.0, cv2.BORDER_REPLICATE)
+        for i in range(num_reg):
+            num_pix = len(self.rlist[i])
+            avg[i] = np.sum(tex[self.rlist[i]])/num_pix
+            var[i] = np.sum((tex[self.rlist[i]] - avg)**2)/num_pix
+        return var, avg, tex
+
+    def get_lbp_var(self):
+        num_reg = len(self.rlist)
+        avg = np.zeros([num_reg, 1])
+        var = np.zeros([num_reg, 1])
+        lbp = local_binary_pattern(self.rgb, 8, 1, 'uniform') 
+        for i in range(num_reg):
+            num_pix = len(self.rlist[i])
+            avg[i] = np.sum(lbp[self.rlist[i]])/num_pix
+            var[i] = np.sum((lbp[self.rlist[i]] - avg[i])**2)/num_pix
+        return lbp_var, lbp
+
+    def get_edge_nums(self):
+        num_reg = len(self.rlist)
+        edge_nums = np.zeros([num_reg, 1])
+        for i in range(num_reg):
+            num_pix = len(self.rlist[i])
+            for j in range(num_pix):
+                y = self.rlist[i][j][0]
+                x = self.rlist[i][j][1]
+                # to be fix
+                is_edge = rmat[x, y] != rmat[x-1, y] or rmat[x,y] != rmat[x+1, y] or rmat[x, y]!=rmat[x, y-1] or rmat[x,y]!=rmat[x,y+1]
+                if is_edge:
+                    edge_nums[i] += 1
+        return edge_nums
+    
+    def get_neigh_areas(self):
+        '''
+        add your neigh_areas process here
+        '''
+        return neigh_areas
+
+    def get_w(self):
+        num_reg = len(self.rlist)
+        pos = np.zeros([num_reg, 2])
+        for i in range(num_reg):
+            reg_array = np.array(self.rlist[i])
+            pos[i, :] = np.sum(reg_array) / reg_array.shape[0]
+        w = np.zeros([num_reg, num_reg])
+        for i in range(num_reg):
+            for j in range(num_reg):
+                w[i, j] = np.exp(-np.sum((pos[i, :] - pos[j, :])**2)/2)
+        return w
+        
+    def mat_read(self, file):
         info_name = file.read(5)
         headData = np.zeros(3, dtype=int32)
         for i in range(3):
@@ -69,69 +122,39 @@ class Utils()
         mat.reshape((headData[0], headData[1], headData[2]))
         return mat
 
-    def mlfilkernal(self,file="DrfiModel.data"):
+    def lm_kernal(self, file="DrfiModel.data"):
         with open(file, 'rb') as f:
-                file_name = f.read(9)
-                _N = np.zeros(3) #_N,_NumN,_NumT,according to drfi_cpp realization
-                for i in range(3):
-                    number = struct.unpack('i', f.read(4))
-                    _N[i] = number
-                w = self.matread(f)
-                _segPara1d = self.matread(f)
-                _lDau1i = self.matread(f)
-                _rDau1i = self.matread(f)
-                _mBest1i = self.matread(f)
-                _nodeStatus1c = self.matread(f)
-                _upper1d = self.matread(f)
-                _avNode1d = self.matread(f)
-                _mlFilters15d = self.matread(f)
-                ndTree = self.matread(f)
-        return _mlFilters15d #LM filters,the most important parameter of texture filter response
+            f.read(9 + 4*3)
+            [self.mat_read(f) for i in range(8)]
+            lm_filters = self.mat_read(f)
+        return lm_filters
 
-    def get_vartex(self): #the average value of texture filter response
-        num_reg = len(self.rlist)
-        avertex = np.zeros([num_reg, 15])
-        vartex = np.zeros([num_reg, 15])
-        mlFilters15d = self.mlFilters15d
-        gray1u = np.zeros([self.img3u.shape[0], self.img3u.shape[1]], dtype=np.int8)
-        gray1d = np.zeros([self.img3u.shape[0], self.img3u.shape[1]], dtype=np.float)
-        cv2.cvtColor(self.img3u, gray1u, cv2.RGB2GRAY)
-        gray1d = gray1u.astype(np.float) / 255.0
-        imtext1d = np.zeros([gray1d.shape[0], gray1d.shape[1], 15])
-        #mlFilters15d is the convolution kernal of LM filters mentioned in the paper
-        cv2.filter2D(gray1d, imtext1d[:, :, i], cv2.CV_F64, mlFilters15d[:, :, i], (0, 0), 0.0, cv2.BORDER_REPLICATE)
-        for i in range(num_reg):
-            imtext1ds = imtext1d[self.rlist[i]]
-            avertex[i] = np.sum(imtext1ds, axis=1)/len(self.rlist[i])
-            vartex[i] = np.sum((imtext1ds - avertex)**2, axis=1)/len(self.rlist[i])
-        return vartex,imtext1d
-
-    def get_varlbp(self): #get the variance value of lbp feature in each region
-        num_reg = len(self.rlist)
-        varlbp = np.zeros(num_reg)
-        averlbp = np.zeros(num_reg)
-        gray1u = np.zeros((self.img3u.shape[0], self.img3u.shape[1]), np.int8)
-        cv2.cvtColor(self.img3u, gray1u, cv2.RGB2GRAY)
-        n_points = 8
-        radius = 1
-        METHOD = 'uniform'
-        lbp = local_binary_pattern(self.img3u, n_points, radius,METHOD) #the lbp map of original picture
-        # n_bins = int(lbp.max() + 1)
-        # hist,_ = np.histogram(lbp,density=true,bins=n_bins,range=(0,n_bins))
-        for i in range(num_reg):
-            num_pix = len(self.rlist[i])
-            averlbp[i] = np.sum(lbp[self.rlist[i]])/num_pix
-            varlbp[i] = np.sum((lbp[self.rlist[i]] - averlbp[i])**2)/num_pix
-        return varlbp, 
-        
-    def get_w(self):
-        num_reg = len(self.rlist)
-        pos = np.zeros([num_reg, 2])
-        for i in range(num_reg):
-            reg_array = np.array(self.rlist[i])
-            pos[i, :] = np.sum(reg_array, axis=1) / reg_array.shape[0]
-        w = np.zeros([num_reg, num_reg])
+    def get_diff(self, array):
+        num_reg = array.shape[0]
+        mat = np.zeros([num_reg, num_reg])
         for i in range(num_reg):
             for j in range(num_reg):
-                w[i, j] = np.exp(-np.sum((pos[i, :] - pos[j, :])**2)/2)
-        return w
+                mat[i][j] = np.abs(array[i] - array[j])
+        return mat
+
+    def get_diff_hist(self, color):
+        num_reg = array.shape[0]
+        # prevent div 0
+        hist = np.ones([num_reg, 256])
+        for i in range(num_reg):
+            hist[i][color[self.rlist[i]]] += 1
+        mat = np.zeros([num_reg, num_reg])
+        for i in range(num_reg):
+            for j in range(num_reg):
+                a = 2 * (hist[i] - hist[j])**2
+                b = hist[i] + hist[j]
+                mat[i][j] = np.sum(a/b)
+        return mat
+    
+    def dot(self, x, hist=False):
+        if hist:
+            diff = self.get_diff_hist(x)
+        else:
+            diff = self.get_diff(x)
+        x = self.a.dot(self.w)
+        return np.sum(x.dot(diff), axis=1)
