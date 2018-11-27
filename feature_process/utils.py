@@ -12,6 +12,7 @@ class Utils()
         self.edge_nums = self.get_edge_nums()
         self.neigh_areas = self.get_neigh_areas()
         self.w = self.get_w()
+        self.blist = self.get_background()
         self.a = [ len(r) for r in rlist]
 
     def get_lab(self):
@@ -109,6 +110,18 @@ class Utils()
             for j in range(num_reg):
                 w[i, j] = np.exp(-np.sum((pos[i, :] - pos[j, :])**2)/2)
         return w
+
+    def get_background(self):
+        blist = []
+        y = [y_ for y_ in range(15)] + [y_ for y_ in range(self.rgb.shpae[0]-15, self.rgb.shape[0])]
+        x = [x_ for x_ in range(self.rgb.shape[1])]
+        for y_ in y:
+            blist += [ (y_, x_) for x_ in x ]
+        y = [y_ for y_ in range(15: self.rgb.shape[0] - 15)]
+        x = [x_ for x_ in range(15):] + [x_ for x_ in range(self.rgb.shape[1]-15, self.rgb.shape[1])]
+        for y_ in y:
+            blist += [ (y_, x_) for x_ in x ]
+        return [blist]
         
     def mat_read(self, file):
         info_name = file.read(5)

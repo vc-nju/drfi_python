@@ -8,6 +8,7 @@ class RegionFeature():
     def __init__(self, rgb, rlist, rmat):
         self.rgb = rgb
         self.rlist = rlist
+        self.rmat = rmat
         self.utils = Utils(rgb, rlist, rmat)
         self.reg_features = self.get_region_features()
 
@@ -42,3 +43,18 @@ class RegionFeature():
         con_features[:, 11] = dot(self.utils.lbp, hist=True)
         return con_features
 
+    def get_background_features(self):
+        num_reg = len(self.rlist)
+        bkg_features = np.zeros([num_reg, 29])
+        utils = Utils(self.rgb, self.utils.blist, self.rmat)
+        dot = utils.dot
+        for i in range(9):
+            bkg_features[:, i] = dot(utils.color_avg[:, i])
+        bkg_features[:, 9] = dot(self.rgb, hist=True)
+        bkg_features[:, 10] = dot(utils.hsv, hist=True)
+        bkg_features[:, 11] = dot(utils.lab, hist=True)
+        for i in range(15):
+            bkg_features[:, i+12] = dot(utils.tex_avg[:, i])
+        bkg_features[:, 27] = dot(utils.tex, hist=True)
+        bkg_features[:, 11] = dot(utils.lbp, hist=True)
+        return bkg_features
