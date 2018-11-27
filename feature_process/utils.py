@@ -24,16 +24,18 @@ class Utils():
         self.a = [len(r) for r in rlist]/(self.width*self.height)#normalization
 
     def get_lab(self):
-        lab = cv2.cvtColor(self.rgb, cv2.CV_RGB2Lab)
+        lab = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2Lab)
         return lab
 
     def get_hsv(self):
-        hsv = cv2.cvtColor(self.rgb, cv2.CV_RGB2HSV)
+        hsv = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2HSV)
         return hsv
 
     def get_coord(self):
         num_reg = len(self.rlist)
         coord = np.zeros([num_reg, 7])
+        coord.astype('float')
+        EPS = 0.00000000001 #for division by zero in calculating the ratio
         for i in range(num_reg):
             sum_y_x = np.sum(np.array(self.rlist[i], dtype=np.int32))
             num_pix = len(self.rlist[i])
@@ -44,10 +46,10 @@ class Utils():
             sortbyy = [_y for _y in sorted(self.rlist[i], key=lambda x: x[0])]
             tenth = int(num_pix*0.1)
             ninetith = int(num_pix*0.9)
-            coord[i][2:6] = [sortbyy[tenth]/self.height, sortbyx[tenth]/self.width, #normalization
-                sortbyy[ninetith]/self.height, sortbyx[ninetith]/self.width]
-            ratio = float(sortbyy[-1] - sortbyy[0]) / \
-                          float(sortbyx[-1] - sortbyx[0])
+            coord[i][2:6] = [sortbyy[tenth][1]/self.height, sortbyx[tenth][0]/self.width, #normalization
+                sortbyy[ninetith][1]/self.height, sortbyx[ninetith][0]/self.width]
+            ratio = float(sortbyy[-1][1] - sortbyy[0][1]) / \
+                          float(sortbyx[-1][0] - sortbyx[0][0] + EPS)
             coord[i][6] = ratio
         return coord
 

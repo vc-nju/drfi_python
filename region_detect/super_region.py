@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
-from utils import Edge, Universe
+import sys
 
+#from utils import Edge, Universe
+from region_detect.utils import Edge,Universe
 
 class Super_Region():
     @staticmethod
@@ -38,7 +40,7 @@ class Super_Region():
     '''
     This method will return a List which contains all super_regions.
     args:
-        - path: the img's path. like: "../data/77.pnd"
+        - path: the img's path. like: "../data/77.jpg"
         - c: the thresholds: like: 166.
     return:
         -rlist = [[[1, 2], [2, 3], ...],  # points in super_region0
@@ -74,6 +76,16 @@ class Super_Region():
                     index += 1
                 rlist[index_array[p]].append((y, x,))
         region = np.zeros(im.shape[0:2], dtype=np.int32)
-        for i in range(len(rlist)):
-            region[rlist[i]] = i
+        for i in range(index):
+            for pos in rlist[i]:
+                region[pos] = i
         return rlist, region
+
+if __name__ == '__main__':
+    path = '../data/77.jpg'
+    rlist,region = Super_Region.get_region(path,166)
+    print(region)
+    region.astype('float')
+    region =region / np.max(region)
+    cv2.imshow('img',region)
+    cv2.waitKey(0)

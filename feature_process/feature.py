@@ -1,7 +1,7 @@
 import numpy as np
 import struct
 import cv2
-from .utils import Utils
+from utils import Utils
 
 
 class RegionFeature():
@@ -23,9 +23,9 @@ class RegionFeature():
         reg_features[:, 32] = self.utils.lbp_var
         reg_features[:, 33] = self.utils.a
         reg_features[:, 34] = self.utils.neigh_areas
-        reg_min = np.min(reg_features)
-        reg_max = np.max(reg_features)
-        reg_features = (reg_features - reg_min) / (reg_max - reg_min)
+        #reg_min = np.min(reg_features)
+        #reg_max = np.max(reg_features)
+        #reg_features = (reg_features - reg_min) / (reg_max - reg_min)
         return reg_features
 
     def get_contrast_features(self):
@@ -47,7 +47,7 @@ class RegionFeature():
         num_reg = len(self.rlist)
         bkg_features = np.zeros([num_reg, 29])
         utils = Utils(self.rgb, self.rlist+self.utils.blist, self.rmat)
-        dot = utils.dot(bkg=True)
+        dot = utils.dot(self.rgb, bkg=True)
         for i in range(9):
             bkg_features[:, i] = dot(utils.color_avg[:, i])
         bkg_features[:, 9] = dot(self.rgb, hist=True)
