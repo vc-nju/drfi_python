@@ -164,10 +164,15 @@ class Utils()
                 mat[i][j] = np.sum(a/b)
         return mat
     
-    def dot(self, x, hist=False):
+    def dot(self, x, hist=False, bkg=False):
         if hist:
             diff = self.get_diff_hist(x)
         else:
             diff = self.get_diff(x)
-        x = self.a.dot(self.w)
-        return np.sum(x.dot(diff), axis=1)
+        if bkg:
+            x = self.a[-1].dot(self.w[-1])
+            x = np.sum(x.dot(diff[-1]), axis=1)
+        else:
+            x = self.a.dot(self.w)
+            x = np.sum(x.dot(diff), axis=1)
+        return x

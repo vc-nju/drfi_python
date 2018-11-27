@@ -46,8 +46,8 @@ class RegionFeature():
     def get_background_features(self):
         num_reg = len(self.rlist)
         bkg_features = np.zeros([num_reg, 29])
-        utils = Utils(self.rgb, self.utils.blist, self.rmat)
-        dot = utils.dot
+        utils = Utils(self.rgb, self.rlist+self.utils.blist, self.rmat)
+        dot = utils.dot(bkg=True)
         for i in range(9):
             bkg_features[:, i] = dot(utils.color_avg[:, i])
         bkg_features[:, 9] = dot(self.rgb, hist=True)
