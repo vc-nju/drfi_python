@@ -1,5 +1,13 @@
-class Utils()
-   def __init__(self, rgb, rlist, rmat):
+import cv2
+import math
+import struct
+import numpy as np
+from skimage.feature import local_binary_pattern
+
+class Utils():
+    def __init__(self, rgb, rlist, rmat):
+        self.height = rmat.shape[0] #for normalization
+        self.width = rmat.shape[1]
         self.rgb = rgb
         self.rlist = rlist
         self.rmat = rmat
@@ -13,7 +21,7 @@ class Utils()
         self.neigh_areas = self.get_neigh_areas()
         self.w = self.get_w()
         self.blist = self.get_background()
-        self.a = [ len(r) for r in rlist]
+        self.a = [len(r) for r in rlist]/(self.width*self.height)#normalization
 
     def get_lab(self):
         lab = cv2.cvtColor(self.rgb, cv2.CV_RGB2Lab)
@@ -30,12 +38,14 @@ class Utils()
             sum_y_x = np.sum(np.array(self.rlist[i], dtype=np.int32))
             num_pix = len(self.rlist[i])
             coord[i][0:2] = sum_y_x//num_pix
+            coord[i][0] /= self.height #normalized mean position:y
+            coord[i][1] /= self.width #normalized mean position:x
             sortbyx = [_x for _x in sorted(self.rlist[i], key=lambda x: x[1])]
             sortbyy = [_y for _y in sorted(self.rlist[i], key=lambda x: x[0])]
             tenth = int(num_pix*0.1)
             ninetith = int(num_pix*0.9)
-            coord[i][2:6] = [sortbyy[tenth], sortbyx[tenth],
-                sortbyy[ninetith], sortbyx[ninetith]]
+            coord[i][2:6] = [sortbyy[tenth]/self.height, sortbyx[tenth]/self.width, #normalization
+                sortbyy[ninetith]/self.height, sortbyx[ninetith]/self.width]
             ratio = float(sortbyy[-1] - sortbyy[0]) / \
                           float(sortbyx[-1] - sortbyx[0])
             coord[i][6] = ratio
@@ -48,7 +58,7 @@ class Utils()
         imgchan = np.append([self.rgb, self.lab, self.hsv], axis=2)
         for i in range(num_reg):
             num_pix = len(self.rlist[i])
-            avg[i, :] = np.sum(imchan[self.rlist[i]]) / num_pix
+            avg[i, :] = np.sum(imgchan[self.rlist[i]]) / num_pix
             var[i, :] = np.sum((imgchan[self.rlist[i]] - avg[i, :])**2 ,axis=0)/num_pix
         return var, avg
 
@@ -77,7 +87,7 @@ class Utils()
             num_pix = len(self.rlist[i])
             avg[i] = np.sum(lbp[self.rlist[i]])/num_pix
             var[i] = np.sum((lbp[self.rlist[i]] - avg[i])**2)/num_pix
-        return lbp_var, lbp
+        return var, lbp
 
     def get_edge_nums(self):
         num_reg = len(self.rlist)
@@ -87,17 +97,27 @@ class Utils()
             for j in range(num_pix):
                 y = self.rlist[i][j][0]
                 x = self.rlist[i][j][1]
-                # to be fix
-                is_edge = rmat[x, y] != rmat[x-1, y] or rmat[x,y] != rmat[x+1, y] or rmat[x, y]!=rmat[x, y-1] or rmat[x,y]!=rmat[x,y+1]
-                if is_edge:
+                if x==0 or x==(self.width-1) or y==0 or y==(self.height-1):
                     edge_nums[i] += 1
-        return edge_nums
+                # to be fix
+                else:
+                    is_edge = self.rmat[x, y] != self.rmat[x-1, y] or self.rmat[x,y] != self.rmat[x+1, y] or self.rmat[x, y]!=self.rmat[x, y-1] or self.rmat[x,y]!=self.rmat[x,y+1]
+                    if is_edge:
+                        edge_nums[i] += 1
+        return edge_nums/(self.width*self.height) #normalization
     
     def get_neigh_areas(self):
-        '''
-        add your neigh_areas process here
-        '''
-        return neigh_areas
+        num_reg = len(self.rlist)
+        neigh_areas = np.zeros([num_reg,1])
+        sigmadist = 0.4
+        for i in range(num_reg):
+            y = self.coord[i][0]
+            x = self.coord[i][1]
+            for j in range(num_reg):
+                _y = self.coord[j][0]
+                _x = self.coord[i][1]
+                neigh_areas[i] += math.exp(-((x - _x)**2 + (y - _y)**2)/sigmadist)
+        return neigh_areas/(self.width*self.height) #normalization
 
     def get_w(self):
         num_reg = len(self.rlist)
@@ -117,15 +137,15 @@ class Utils()
         x = [x_ for x_ in range(self.rgb.shape[1])]
         for y_ in y:
             blist += [ (y_, x_) for x_ in x ]
-        y = [y_ for y_ in range(15: self.rgb.shape[0] - 15)]
-        x = [x_ for x_ in range(15):] + [x_ for x_ in range(self.rgb.shape[1]-15, self.rgb.shape[1])]
+        y = [y_ for y_ in range(15, self.rgb.shape[0] - 15)]
+        x = [x_ for x_ in range(15)] + [x_ for x_ in range(self.rgb.shape[1]-15, self.rgb.shape[1])]
         for y_ in y:
             blist += [ (y_, x_) for x_ in x ]
         return [blist]
         
     def mat_read(self, file):
         info_name = file.read(5)
-        headData = np.zeros(3, dtype=int32)
+        headData = np.zeros(3, dtype=np.int32)
         for i in range(3):
             headData[i] = struct.unpack('i', file.read(4))
         total = headData[0]*headData[1]*headData[2]
@@ -151,7 +171,7 @@ class Utils()
         return mat
 
     def get_diff_hist(self, color):
-        num_reg = array.shape[0]
+        num_reg = len(self.rlist)
         # prevent div 0
         hist = np.ones([num_reg, 256])
         for i in range(num_reg):
