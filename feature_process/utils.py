@@ -37,19 +37,25 @@ class Utils():
         coord.astype('float')
         EPS = 0.00000000001 #for division by zero in calculating the ratio
         for i in range(num_reg):
-            sum_y_x = np.sum(np.array(self.rlist[i], dtype=np.int32))
-            num_pix = len(self.rlist[i])
+            sum_y_x = np.sum(np.array(self.rlist[i], dtype=np.int32),axis=1)
+            num_pix = len(self.rlist[i][0])
             coord[i][0:2] = sum_y_x//num_pix
             coord[i][0] /= self.height #normalized mean position:y
             coord[i][1] /= self.width #normalized mean position:x
-            sortbyx = [_x for _x in sorted(self.rlist[i], key=lambda x: x[1])]
-            sortbyy = [_y for _y in sorted(self.rlist[i], key=lambda x: x[0])]
+            #sortbyx = [_x for _x in sorted(self.rlist[i], key=lambda x: x[1])]
+            #sortbyy = [_y for _y in sorted(self.rlist[i], key=lambda x: x[0])]
+            sortbyx = [_x for _x in sorted(self.rlist[i])[1]]
+            sortbyy = [_y for _y in sorted(self.rlist[i])[0]]
             tenth = int(num_pix*0.1)
             ninetith = int(num_pix*0.9)
-            coord[i][2:6] = [sortbyy[tenth][1]/self.height, sortbyx[tenth][0]/self.width, #normalization
-                sortbyy[ninetith][1]/self.height, sortbyx[ninetith][0]/self.width]
-            ratio = float(sortbyy[-1][1] - sortbyy[0][1]) / \
-                          float(sortbyx[-1][0] - sortbyx[0][0] + EPS)
+            print(ninetith)
+            print(num_pix)
+            print(sortbyx)
+            print(sortbyy)
+            coord[i][2:6] = [sortbyy[tenth]/self.height, sortbyx[tenth]/self.width, #normalization
+                sortbyy[ninetith]/self.height, sortbyx[ninetith]/self.width]
+            ratio = float(sortbyy[-1] - sortbyy[0]) / \
+                          float(sortbyx[-1] - sortbyx[0] + EPS)
             coord[i][6] = ratio
         return coord
 
@@ -57,9 +63,9 @@ class Utils():
         num_reg = len(self.rlist)
         avg = np.zeros([num_reg, 9])
         var = np.zeros([num_reg, 9])
-        imgchan = np.append([self.rgb, self.lab, self.hsv], axis=2)
+        imgchan = np.concatenate([self.rgb, self.lab, self.hsv], axis=2)
         for i in range(num_reg):
-            num_pix = len(self.rlist[i])
+            num_pix = len(self.rlist[i][0])
             avg[i, :] = np.sum(imgchan[self.rlist[i]]) / num_pix
             var[i, :] = np.sum((imgchan[self.rlist[i]] - avg[i, :])**2 ,axis=0)/num_pix
         return var, avg
@@ -69,13 +75,13 @@ class Utils():
         avg = np.zeros([num_reg, 15])
         var = np.zeros([num_reg, 15])
         lm_fiters = self.lm_kernal()
-        gray = cv2.cvtColor(self.rgb, cv2.RGB2GRAY)
+        gray = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2GRAY)
         gray = gray.astype(np.float) / 255.0
         tex = np.zeros([gray.shape[0], gray.shape[1], 15])
         for i in range(len(lm_fiters)):
             tex[:, :, i] = cv2.filter2D(gray, cv2.CV_F64, lm_fiters[:, :, i], (0, 0), 0.0, cv2.BORDER_REPLICATE)
         for i in range(num_reg):
-            num_pix = len(self.rlist[i])
+            num_pix = len(self.rlist[i][0])
             avg[i] = np.sum(tex[self.rlist[i]])/num_pix
             var[i] = np.sum((tex[self.rlist[i]] - avg)**2)/num_pix
         return var, avg, tex
@@ -86,7 +92,7 @@ class Utils():
         var = np.zeros([num_reg, 1])
         lbp = local_binary_pattern(self.rgb, 8, 1, 'uniform') 
         for i in range(num_reg):
-            num_pix = len(self.rlist[i])
+            num_pix = len(self.rlist[i][0])
             avg[i] = np.sum(lbp[self.rlist[i]])/num_pix
             var[i] = np.sum((lbp[self.rlist[i]] - avg[i])**2)/num_pix
         return var, lbp
@@ -95,7 +101,7 @@ class Utils():
         num_reg = len(self.rlist)
         edge_nums = np.zeros([num_reg, 1])
         for i in range(num_reg):
-            num_pix = len(self.rlist[i])
+            num_pix = len(self.rlist[i][0])
             for j in range(num_pix):
                 y = self.rlist[i][j][0]
                 x = self.rlist[i][j][1]
@@ -149,15 +155,17 @@ class Utils():
         info_name = file.read(5)
         headData = np.zeros(3, dtype=np.int32)
         for i in range(3):
-            headData[i] = struct.unpack('i', file.read(4))
+            #headData[i] = struct.unpack('i', file.read(4))
+            headData[i] = struct.unpack('i', file.read(4))[0]#the return type of unpack is (x,)
         total = headData[0]*headData[1]*headData[2]
         mat = np.zeros(total, dtype=np.int8)
         for i in range(total):
-            mat[i] = file.read(1)
+            char = struct.unpack('c', file.read(1))[0]
+            mat[i] = ord(char)
         mat.reshape((headData[0], headData[1], headData[2]))
         return mat
 
-    def lm_kernal(self, file="DrfiModel.data"):
+    def lm_kernal(self, file="./DrfiModel.data"):
         with open(file, 'rb') as f:
             f.read(9 + 4*3)
             [self.mat_read(f) for i in range(8)]
