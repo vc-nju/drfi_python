@@ -1,8 +1,9 @@
 import cv2
 import math
-import struct
+#import struct
 import numpy as np
 from skimage.feature import local_binary_pattern
+import lmfilter
 
 class Utils():
     def __init__(self, rgb, rlist, rmat):
@@ -78,19 +79,22 @@ class Utils():
         gray = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2GRAY)
         gray = gray.astype(np.float) / 255.0
         tex = np.zeros([gray.shape[0], gray.shape[1], 15])
-        for i in range(len(lm_fiters)):
-            tex[:, :, i] = cv2.filter2D(gray, cv2.CV_F64, lm_fiters[:, :, i], (0, 0), 0.0, cv2.BORDER_REPLICATE)
+        #for i in range(len(lm_fiters)):
+        for i in range(15):
+            #tex[:, :, i] = cv2.filter2D(gray, cv2.CV_64F, lm_fiters[:, :, i], (0, 0), 0.0, cv2.BORDER_REPLICATE)
+            tex[:,:,i] = cv2.filter2D(gray,cv2.CV_64F,lm_fiters[:,:,i])
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
             avg[i] = np.sum(tex[self.rlist[i]])/num_pix
-            var[i] = np.sum((tex[self.rlist[i]] - avg)**2)/num_pix
+            var[i] = np.sum((tex[self.rlist[i]] - avg[i])**2)/num_pix
         return var, avg, tex
 
     def get_lbp_var(self):
         num_reg = len(self.rlist)
         avg = np.zeros([num_reg, 1])
         var = np.zeros([num_reg, 1])
-        lbp = local_binary_pattern(self.rgb, 8, 1, 'uniform') 
+        gray = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2GRAY)
+        lbp = local_binary_pattern(gray, 8, 1, 'uniform') 
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
             avg[i] = np.sum(lbp[self.rlist[i]])/num_pix
@@ -103,13 +107,13 @@ class Utils():
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
             for j in range(num_pix):
-                y = self.rlist[i][j][0]
-                x = self.rlist[i][j][1]
+                y = self.rlist[i][0][j]
+                x = self.rlist[i][1][j]
                 if x==0 or x==(self.width-1) or y==0 or y==(self.height-1):
                     edge_nums[i] += 1
                 # to be fix
                 else:
-                    is_edge = self.rmat[x, y] != self.rmat[x-1, y] or self.rmat[x,y] != self.rmat[x+1, y] or self.rmat[x, y]!=self.rmat[x, y-1] or self.rmat[x,y]!=self.rmat[x,y+1]
+                    is_edge = self.rmat[y, x] != self.rmat[y-1, x] or self.rmat[y,x] != self.rmat[y+1, x] or self.rmat[y, x]!=self.rmat[y, x-1] or self.rmat[y,x]!=self.rmat[y,x+1]
                     if is_edge:
                         edge_nums[i] += 1
         return edge_nums/(self.width*self.height) #normalization
@@ -150,7 +154,12 @@ class Utils():
         for y_ in y:
             blist += [ (y_, x_) for x_ in x ]
         return [blist]
-        
+    
+    def lm_kernal(self):
+        lm_filters = np.zeros([49,49,15])
+        lm_filters = lmfilter.make_lmfilter()[:,:,0:15]
+        return lm_filters
+    '''
     def mat_read(self, file):
         info_name = file.read(5)
         headData = np.zeros(3, dtype=np.int32)
@@ -171,6 +180,7 @@ class Utils():
             [self.mat_read(f) for i in range(8)]
             lm_filters = self.mat_read(f)
         return lm_filters
+    '''
 
     def get_diff(self, array):
         num_reg = array.shape[0]
