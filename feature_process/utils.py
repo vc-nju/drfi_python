@@ -1,9 +1,9 @@
 import cv2
 import math
-#import struct
 import numpy as np
 from skimage.feature import local_binary_pattern
-from lmfilter import make_lmfilter
+
+from .lmfilter import make_lmfilter
 
 class Utils():
     def __init__(self, rgb, rlist, rmat):
@@ -92,12 +92,12 @@ class Utils():
         avg = np.zeros([num_reg, 1])
         var = np.zeros([num_reg, 1])
         gray = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2GRAY)
-        lbp = local_binary_pattern(gray, 8, 1, 'uniform') 
+        lbp = local_binary_pattern(gray, 8, 1.) 
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
             avg[i] = np.sum(lbp[self.rlist[i]])/num_pix
             var[i] = np.sum((lbp[self.rlist[i]] - avg[i])**2)/num_pix
-        return var, lbp
+        return var, lbp.astype(np.int32)
 
     def get_edge_nums(self):
         num_reg = len(self.rlist)
@@ -148,15 +148,19 @@ class Utils():
         
 
     def get_background(self):
-        blist = []
+        blist = [(),()]
         y = [y_ for y_ in range(15)] + [y_ for y_ in range(self.rgb.shape[0]-15, self.rgb.shape[0])]
         x = [x_ for x_ in range(self.rgb.shape[1])]
         for y_ in y:
-            blist += [ (y_, x_) for x_ in x ]
+            for x_ in x:
+                blist[0] += (y_,)
+                blist[1] += (x_,)
         y = [y_ for y_ in range(15, self.rgb.shape[0] - 15)]
         x = [x_ for x_ in range(15)] + [x_ for x_ in range(self.rgb.shape[1]-15, self.rgb.shape[1])]
         for y_ in y:
-            blist += [ (y_, x_) for x_ in x ]
+            for x_ in x:
+                blist[0] += (y_,)
+                blist[1] += (x_,)
         return [blist]
     
     def ml_kernal(self):
@@ -191,11 +195,10 @@ class Utils():
             diff = self.get_diff_hist(x)
         else:
             diff = self.get_diff(x)
+        x = self.w * diff
         if bkg:
-            x = self.a[-1].dot(self.w[-1])
-            x = np.sum(x.dot(diff[-1]), axis=1)
+            x = x[-1]
         else:
-            x = self.a.dot(self.w)
-            x = np.sum(x.dot(diff), axis=1)
+            x = np.sum(x, axis=1)
+        x = x * self.a[0]
         return x
-
