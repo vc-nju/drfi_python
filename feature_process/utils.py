@@ -2,8 +2,8 @@ import cv2
 import math
 #import struct
 import numpy as np
-from skimage.feature import local_binary_pattern
-import lmfilter
+# from skimage.feature import local_binary_pattern
+from .lmfilter import make_lmfilter
 
 class Utils():
     def __init__(self, rgb, rlist, rmat):
@@ -17,12 +17,12 @@ class Utils():
         self.coord = self.get_coord()
         self.color_var, self.color_avg = self.get_color_var()
         self.tex_var, self.tex_avg, self.tex = self.get_tex_var()
-        self.lbp_var, self.lbp = self.get_lbp_var()
+        # self.lbp_var, self.lbp = self.get_lbp_var()
         self.edge_nums = self.get_edge_nums()
         self.neigh_areas = self.get_neigh_areas()
         self.w = self.get_w()
+        self.a = self.get_a() # normalization
         self.blist = self.get_background()
-        self.a = [len(r) for r in rlist]/(self.width*self.height)#normalization
 
     def get_lab(self):
         lab = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2Lab)
@@ -36,23 +36,17 @@ class Utils():
         num_reg = len(self.rlist)
         coord = np.zeros([num_reg, 7])
         coord.astype('float')
-        EPS = 0.00000000001 #for division by zero in calculating the ratio
+        EPS = 1. # for division by zero in calculating the ratio
         for i in range(num_reg):
             sum_y_x = np.sum(np.array(self.rlist[i], dtype=np.int32),axis=1)
             num_pix = len(self.rlist[i][0])
             coord[i][0:2] = sum_y_x//num_pix
             coord[i][0] /= self.height #normalized mean position:y
             coord[i][1] /= self.width #normalized mean position:x
-            #sortbyx = [_x for _x in sorted(self.rlist[i], key=lambda x: x[1])]
-            #sortbyy = [_y for _y in sorted(self.rlist[i], key=lambda x: x[0])]
-            sortbyx = [_x for _x in sorted(self.rlist[i])[1]]
-            sortbyy = [_y for _y in sorted(self.rlist[i])[0]]
+            sortbyy = sorted(self.rlist[i][0])
+            sortbyx = sorted(self.rlist[i][1])
             tenth = int(num_pix*0.1)
             ninetith = int(num_pix*0.9)
-            print(ninetith)
-            print(num_pix)
-            print(sortbyx)
-            print(sortbyy)
             coord[i][2:6] = [sortbyy[tenth]/self.height, sortbyx[tenth]/self.width, #normalization
                 sortbyy[ninetith]/self.height, sortbyx[ninetith]/self.width]
             ratio = float(sortbyy[-1] - sortbyy[0]) / \
@@ -67,26 +61,26 @@ class Utils():
         imgchan = np.concatenate([self.rgb, self.lab, self.hsv], axis=2)
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
-            avg[i, :] = np.sum(imgchan[self.rlist[i]]) / num_pix
-            var[i, :] = np.sum((imgchan[self.rlist[i]] - avg[i, :])**2 ,axis=0)/num_pix
+            avg[i, :] = np.sum(imgchan[self.rlist[i][0], self.rlist[i][1]]) / num_pix
+            var[i, :] = np.sum((imgchan[self.rlist[i][0], self.rlist[i][1]] - avg[i, :])**2 ,axis=0)/num_pix
         return var, avg
 
     def get_tex_var(self):
         num_reg = len(self.rlist)
         avg = np.zeros([num_reg, 15])
         var = np.zeros([num_reg, 15])
-        lm_fiters = self.lm_kernal()
+        ml_fiters = self.ml_kernal()
         gray = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2GRAY)
         gray = gray.astype(np.float) / 255.0
         tex = np.zeros([gray.shape[0], gray.shape[1], 15])
-        #for i in range(len(lm_fiters)):
+        #for i in range(len(ml_fiters)):
         for i in range(15):
-            #tex[:, :, i] = cv2.filter2D(gray, cv2.CV_64F, lm_fiters[:, :, i], (0, 0), 0.0, cv2.BORDER_REPLICATE)
-            tex[:,:,i] = cv2.filter2D(gray,cv2.CV_64F,lm_fiters[:,:,i])
+            #tex[:, :, i] = cv2.filter2D(gray, cv2.CV_64F, ml_fiters[:, :, i], (0, 0), 0.0, cv2.BORDER_REPLICATE)
+            tex[:,:,i] = cv2.filter2D(gray,cv2.CV_64F,ml_fiters[:,:,i])
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
-            avg[i] = np.sum(tex[self.rlist[i]])/num_pix
-            var[i] = np.sum((tex[self.rlist[i]] - avg[i])**2)/num_pix
+            avg[i] = np.sum(tex[self.rlist[i][0], self.rlist[i][1]])/num_pix
+            var[i] = np.sum((tex[self.rlist[i][0], self.rlist[i][1]] - avg[i])**2)/num_pix
         return var, avg, tex
 
     def get_lbp_var(self):
@@ -143,9 +137,15 @@ class Utils():
                 w[i, j] = np.exp(-np.sum((pos[i, :] - pos[j, :])**2)/2)
         return w
 
+    def get_a(self):
+        a = np.zeros([len(self.rlist), 1] )
+        a[:, 0] = [float(len(r))/float(self.width*self.height) for r in self.rlist]
+        return np.array(a)
+        
+
     def get_background(self):
         blist = []
-        y = [y_ for y_ in range(15)] + [y_ for y_ in range(self.rgb.shpae[0]-15, self.rgb.shape[0])]
+        y = [y_ for y_ in range(15)] + [y_ for y_ in range(self.rgb.shape[0]-15, self.rgb.shape[0])]
         x = [x_ for x_ in range(self.rgb.shape[1])]
         for y_ in y:
             blist += [ (y_, x_) for x_ in x ]
@@ -155,32 +155,10 @@ class Utils():
             blist += [ (y_, x_) for x_ in x ]
         return [blist]
     
-    def lm_kernal(self):
-        lm_filters = np.zeros([49,49,15])
-        lm_filters = lmfilter.make_lmfilter()[:,:,0:15]
-        return lm_filters
-    '''
-    def mat_read(self, file):
-        info_name = file.read(5)
-        headData = np.zeros(3, dtype=np.int32)
-        for i in range(3):
-            #headData[i] = struct.unpack('i', file.read(4))
-            headData[i] = struct.unpack('i', file.read(4))[0]#the return type of unpack is (x,)
-        total = headData[0]*headData[1]*headData[2]
-        mat = np.zeros(total, dtype=np.int8)
-        for i in range(total):
-            char = struct.unpack('c', file.read(1))[0]
-            mat[i] = ord(char)
-        mat.reshape((headData[0], headData[1], headData[2]))
-        return mat
-
-    def lm_kernal(self, file="./DrfiModel.data"):
-        with open(file, 'rb') as f:
-            f.read(9 + 4*3)
-            [self.mat_read(f) for i in range(8)]
-            lm_filters = self.mat_read(f)
-        return lm_filters
-    '''
+    def ml_kernal(self):
+        ml_filters = np.zeros([49,49,15])
+        ml_filters = make_lmfilter()[:,:,0:15]
+        return ml_filters
 
     def get_diff(self, array):
         num_reg = array.shape[0]
@@ -195,7 +173,7 @@ class Utils():
         # prevent div 0
         hist = np.ones([num_reg, 256])
         for i in range(num_reg):
-            hist[i][color[self.rlist[i]]] += 1
+            hist[i][color[self.rlist[i][0], self.rlist[i][1]]] += 1
         mat = np.zeros([num_reg, num_reg])
         for i in range(num_reg):
             for j in range(num_reg):
@@ -216,3 +194,4 @@ class Utils():
             x = self.a.dot(self.w)
             x = np.sum(x.dot(diff), axis=1)
         return x
+

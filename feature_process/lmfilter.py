@@ -108,5 +108,4 @@ def makeLMfilters():
 # Call the make filter function
 def make_lmfilter():
     F = makeLMfilters()
-    print(F.shape)
     return F
