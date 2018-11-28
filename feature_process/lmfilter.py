@@ -1,4 +1,8 @@
 '''
+Code Reference: https://github.com/CVDLBOT/LM_filter_bank_python_code
+'''
+
+'''
 The Leung-Malik (LM) Filter Bank, implementation in python
 T. Leung and J. Malik. Representing and recognizing the visual appearance of
 materials using three-dimensional textons. International Journal of Computer

@@ -1,8 +1,8 @@
-import numpy as np
-import struct
 import cv2
-from .utils import Utils
+import numpy as np
 import functools
+
+from .utils import Utils
 
 class Features():
     def __init__(self, rgb, rlist, rmat):
