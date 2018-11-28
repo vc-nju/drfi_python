@@ -2,8 +2,8 @@ import cv2
 import math
 #import struct
 import numpy as np
-# from skimage.feature import local_binary_pattern
-from .lmfilter import make_lmfilter
+from skimage.feature import local_binary_pattern
+from lmfilter import make_lmfilter
 
 class Utils():
     def __init__(self, rgb, rlist, rmat):
@@ -17,7 +17,7 @@ class Utils():
         self.coord = self.get_coord()
         self.color_var, self.color_avg = self.get_color_var()
         self.tex_var, self.tex_avg, self.tex = self.get_tex_var()
-        # self.lbp_var, self.lbp = self.get_lbp_var()
+        self.lbp_var, self.lbp = self.get_lbp_var()
         self.edge_nums = self.get_edge_nums()
         self.neigh_areas = self.get_neigh_areas()
         self.w = self.get_w()
@@ -35,7 +35,6 @@ class Utils():
     def get_coord(self):
         num_reg = len(self.rlist)
         coord = np.zeros([num_reg, 7])
-        coord.astype('float')
         EPS = 1. # for division by zero in calculating the ratio
         for i in range(num_reg):
             sum_y_x = np.sum(np.array(self.rlist[i], dtype=np.int32),axis=1)
@@ -81,6 +80,11 @@ class Utils():
             num_pix = len(self.rlist[i][0])
             avg[i] = np.sum(tex[self.rlist[i][0], self.rlist[i][1]])/num_pix
             var[i] = np.sum((tex[self.rlist[i][0], self.rlist[i][1]] - avg[i])**2)/num_pix
+        for i in range(15):
+            Max = np.max(tex[:,:,i])
+            Min = np.min(tex[:,:,i])
+            tex[:,:,i] = (tex[:,:,i] -Min)/(Max - Min) * 255
+        tex = tex.astype(np.int8)
         return var, avg, tex
 
     def get_lbp_var(self):

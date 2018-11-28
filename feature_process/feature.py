@@ -1,7 +1,7 @@
 import numpy as np
 import struct
 import cv2
-from .utils import Utils
+from utils import Utils
 
 
 class Features():
