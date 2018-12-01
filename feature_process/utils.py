@@ -232,16 +232,12 @@ class Utils():
                 mat[i][j] = np.sum(a/b)
         return mat
     
-    def dot(self, x, hist=False, bkg=False):
+    def dot(self, x, hist=False):
         if hist:
             diff = self.get_diff_hist(x)
         else:
             diff = self.get_diff(x)
         x = self.w * diff
-        if bkg:
-            x = x[-1]
-        else:
-            x = np.sum(x, axis=1)
         x = x * self.a[0]
         return x
 
