@@ -18,7 +18,8 @@ class Utils():
         self.color_var, self.color_avg = self.get_color_var()
         self.tex_var, self.tex_avg, self.tex = self.get_tex_var()
         self.lbp_var, self.lbp = self.get_lbp_var()
-        self.edge_nums = self.get_edge_nums()
+        self.edge_nums, self.edge_neigh, self.edge_point = self.get_edge_nums() #the number and the neighbor region of region[i]
+        self.edge_prop = self.get_edge_prop()
         self.neigh_areas = self.get_neigh_areas()
         self.w = self.get_w()
         self.a = self.get_a()
@@ -101,21 +102,64 @@ class Utils():
     def get_edge_nums(self):
         num_reg = self.num_reg
         edge_nums = np.zeros([num_reg, 1])
+        edge_neigh = []
+        edge_point = []
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
+            edge_neigh.append(()) #the neighbor region around region[i]
+            edge_point.append([]) #the edge point between Ri and Rj
             for j in range(num_pix):
                 y = self.rlist[i][0][j]
                 x = self.rlist[i][1][j]
                 if x==0 or x==(self.width-1) or y==0 or y==(self.height-1):
                     edge_nums[i] += 1
                 else:
-                    is_edge = self.rmat[y, x] != self.rmat[y-1, x] or self.rmat[y,x] != self.rmat[y+1, x] or self.rmat[y, x]!=self.rmat[y, x-1] or self.rmat[y,x]!=self.rmat[y,x+1]
+                    is_edge = self.rmat[y-1, x] != i or self.rmat[y+1, x] != i or self.rmat[y, x-1] != i or self.rmat[y,x+1] != i
                     if is_edge:
+                        if self.rmat[y-1,x] != i and self.rmat[y-1,x] not in edge_neigh[i]:
+                            _neigh = self.rmat[y-1,x]
+                            edge_neigh[i] += (self.rmat[y-1,x],) #add the index of neighbor region
+                        elif (self.rmat[y+1, x],) != i and self.rmat[y+1,x] not in edge_neigh[i]:
+                            _neigh = self.rmat[y+1,x]
+                            edge_neigh[i] += ((self.rmat[y+1,x]),)
+                        elif self.rmat[y, x-1] != i and self.rmat[y,x-1] not in edge_neigh[i]:
+                            _neigh = self.rmat[y,x-1]
+                            edge_neigh[i] += ((self.rmat[y,x-1]),)
+                        elif self.rmat[y,x+1] != i and self.rmat[y,x+1] not in edge_neigh[i]:
+                            _neigh = self.rmat[y,x+1]
+                            edge_neigh[i] += ((self.rmat[y,x+1]),)
                         edge_nums[i] += 1
+                        neighbor = edge_neigh.index(_neigh)
+                        edge_point[i][neighbor][0] += (y,)
+                        edge_point[i][neighbor][1] += (x,)
         edge_nums /= self.width*self.height
-        return edge_nums
-    
-    def get_neigh_areas(self):
+        return edge_nums,edge_neigh,edge_point  #   edge_nums: the total edge of Ri, 
+                                                #   edge_neigh: the neighbor region of Ri, [[(1,2,...i,),(2,3,...j,)]]
+                                                #   edge_point: the point in edge between Ri and Rj
+                                                #   the storage sequence may be a bit confusing, good luck!
+                                
+    def get_edge_prop(self):#get the property of the edge in two neighbor regions
+        num_reg = self.num_reg
+        edge_prop = np.zeros((num_reg,num_reg,7))
+        for i in range(num_reg):#region i
+            for k in range(self.edge_neigh):
+                j = self.edge_neigh[k] #region j
+                edge_ij = self.edge_point[i][k] #the points in the edge between Ri and Rj
+                num_points = len(edge_ij[0])
+                edge_prop[i,j,0] = float(sum(edge_ij[0]) / num_points)
+                edge_prop[i,j,1] = float(sum(edge_ij[1]) / num_points)
+                sortby_y = sorted(edge_ij[0])
+                sortby_x = sorted(edge_ij[1])
+                tenth = int(num_points * 0.1)
+                ninetith = int(num_points * 0.9)
+                edge_prop[i,j,2] = sortby_y[tenth]
+                edge_prop[i,j,3] = sortby_x[tenth]
+                edge_prop[i,j,4] = sortby_y[ninetith]
+                edge_prop[i,j,5] = sortby_x[ninetith]
+                edge_prop[i,j,6] = float(num_points / (self.width * self.height))
+        return edge_prop
+
+    def get_neigh_areas(self): #scope: full space
         num_reg = self.num_reg
         neigh_areas = np.zeros([num_reg,1])
         sigmadist = 0.4
@@ -200,3 +244,5 @@ class Utils():
             x = np.sum(x, axis=1)
         x = x * self.a[0]
         return x
+
+    
