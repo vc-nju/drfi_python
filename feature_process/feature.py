@@ -39,12 +39,22 @@ class Features():
         bkg_features = bkg_features.T
         return bkg_features
     
-    def get_combine_features(self):
+    def get_combine_features(self): #the edge_neigh: [(2,3,1...), (2,3,5...), (5,6,2...)...]
         edge_ids = self.utils.edge_neigh
         comb_features = []
         for ids in edge_ids:
             comb_features.append(self.features29[:, ids, :-1])
         return comb_features
+
+    # def get_combine_features(self): #the edge_neigh: [(2,3,1...), (2,3,5...), (5,6,2...)...]
+    #     comb_features = []
+    #     num_reg = len(self.rlist)
+    #     for i in range(num_reg):
+    #         comb_features.append([])
+    #         edge_ids = self.utils.edge_neigh[i]
+    #         for j in edge_ids:
+    #             comb_features[i].append(self.features29[:,i,j])
+    #     return comb_features
 
     def get_29_features(self):
         num_reg = len(self.rlist)

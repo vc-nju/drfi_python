@@ -134,8 +134,8 @@ class Utils():
                         edge_point[i][neighbor][1] += (x,)
         edge_nums /= self.width*self.height
         return edge_nums,edge_neigh,edge_point  #   edge_nums: the total edge of Ri, 
-                                                #   edge_neigh: the neighbor region of Ri, [[(1,2,...i,),(2,3,...j,)]]
-                                                #   edge_point: the point in edge between Ri and Rj
+                                                #   edge_neigh: the neighbor region of Ri, [(),()]
+                                                #   edge_point: the point in edge between Ri and Rj, [[(1,2,...i,),(2,3,...j,)]]
                                                 #   the storage sequence may be a bit confusing, good luck!
                                 
     def get_edge_prop(self):#get the property of the edge in two neighbor regions
