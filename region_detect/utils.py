@@ -2,9 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
-'''
-    load img and ann here
-'''
 
 
 class Edge():

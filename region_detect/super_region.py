@@ -1,9 +1,8 @@
 import cv2
 import numpy as np
-import sys
 
-#from utils import Edge, Universe
-from region_detect.utils import Edge,Universe
+from .utils import Edge, Universe
+
 
 class Super_Region():
     @staticmethod
@@ -37,19 +36,19 @@ class Super_Region():
         edges.sort(key=lambda x: x.weight)
         return edges
 
-    '''
-    This method will return a List which contains all super_regions.
-    args:
-        - path: the img's path. like: "../data/77.jpg"
-        - c: the thresholds: like: 166.
-    return:
-        -rlist = [
-                    [ (y1, y2, y3,), (x1, x2, x3,) ],  # points in super_region0  
-                    ... ,
-                 ]
-    '''
     @staticmethod
     def get_region(path, c):
+        """
+        This method will return a List which contains all super_regions.
+        args:
+            - path: the img's path. like: "../data/77.jpg"
+            - c: the thresholds: like: 166.
+        return:
+            -rlist = [
+                        [ (y1, y2, y3,), (x1, x2, x3,) ],  # points in super_region0  
+                        ... ,
+                     ]
+        """
         im = Super_Region.guass_filter(path)
         edges = Super_Region.get_edges(im)
         im_size = im.shape[0]*im.shape[1]
@@ -73,7 +72,7 @@ class Super_Region():
                 p = u.find(y * im.shape[0] + x)
                 if index_array[p] == -1:
                     index_array[p] = index
-                    rlist.append( [(),()] )
+                    rlist.append([(), ()])
                     index += 1
                 rlist[index_array[p]][0] += (y,)
                 rlist[index_array[p]][1] += (x,)
@@ -82,12 +81,3 @@ class Super_Region():
         for i in range(len(rlist)):
             region[rlist[i][0], rlist[i][1]] = i
         return rlist, region
-
-if __name__ == '__main__':
-    path = '../data/77.jpg'
-    rlist,region = Super_Region.get_region(path,166)
-    print(region)
-    region.astype('float')
-    region =region / np.max(region)
-    cv2.imshow('img',region)
-    cv2.waitKey(0)
