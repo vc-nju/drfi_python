@@ -1,3 +1,12 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
+'''
+    load img and ann here
+'''
+
+
 class Edge():
     def __init__(self, a, b, weight):
         self.a = a
@@ -36,3 +45,22 @@ class Universe():
             y.size += x.size
             if x.rank == y.rank:
                 y.rank += 1
+
+
+def coco2pic(img, ann, path):
+    plt.figure()
+    plt.imshow(np.zeros_like(img, dtype=np.int8))
+    c = 1
+    polygons = []
+    colors = []
+    for seg in ann['segmentation']:
+        poly = np.array(seg).reshape((int(len(seg)/2), 2))
+        polygons.append(Polygon(poly))
+        color = (np.ones((1, 3)) * c).tolist()[0]
+        colors.append(color)
+        c += 3
+    ax = plt.gca()
+    ax.set_autoscale_on(False)
+    p = PatchCollection(polygons, facecolor=colors, linewidths=0, alpha=1)
+    ax.add_collection(p)
+    plt.savefig(path)

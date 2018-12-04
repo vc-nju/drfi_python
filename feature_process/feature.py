@@ -25,7 +25,7 @@ class Features():
         reg_features[17:32] = self.utils.tex_var
         reg_features[32] = self.utils.lbp_var
         reg_features[33] = self.utils.a[:, 0]
-        reg_features[34] = self.utils.neigh_areas[:, 0]
+        reg_features[34]  = self.utils.neigh_areas[:, 0]
         reg_features = reg_features.T
         return reg_features
 
