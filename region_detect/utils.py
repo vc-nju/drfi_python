@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
@@ -45,19 +46,30 @@ class Universe():
 
 
 def coco2pic(img, ann, path):
-    plt.figure()
+    plt.figure(0)
     plt.imshow(np.zeros_like(img, dtype=np.int8))
-    c = 1
+    plt.axis("off")
+    c = 6.
     polygons = []
     colors = []
-    for seg in ann['segmentation']:
-        poly = np.array(seg).reshape((int(len(seg)/2), 2))
+    segs = [ann[i]['segmentation'][0] for i in range(len(ann))]
+    for seg in segs:
+        poly = np.array(seg).reshape(int(len(seg)/2), 2)
         polygons.append(Polygon(poly))
-        color = (np.ones((1, 3)) * c).tolist()[0]
-        colors.append(color)
-        c += 3
+        color = np.zeros((1, 3))
+        color[0,0] += c/255. 
+        color[0, 1] += (1.-c/255.)
+        colors.append(color.tolist()[0])
+        c += 6.
     ax = plt.gca()
     ax.set_autoscale_on(False)
     p = PatchCollection(polygons, facecolor=colors, linewidths=0, alpha=1)
     ax.add_collection(p)
     plt.savefig(path)
+    plt.close(0)
+    im = cv2.imread(path)
+    a = im.shape + img.shape
+    b = im.shape - img.shape
+    im_ = np.zeros_like(img, dtype=np.int8)
+    im_ = im[b[0]/2:a[0]/2, b[1]/2, a[1]/2, :]
+    cv2.imwrite(path, im_)
