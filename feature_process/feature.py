@@ -3,9 +3,10 @@ import numpy as np
 
 from .utils import Utils
 
+
 class Features():
-    def __init__(self, rgb, rlist, rmat):
-        self.rgb = rgb
+    def __init__(self, path, rlist, rmat):
+        self.rgb = cv2.imread(path)
         self.rlist = rlist
         self.rmat = rmat
         self.utils = Utils(rgb, rlist, rmat)
@@ -13,9 +14,9 @@ class Features():
         self.reg_features = self.get_region_features()
         self.con_features = self.get_contrast_features()
         self.bkp_features = self.get_background_features()
-        self.comb_features= self.get_combine_features()
+        self.comb_features = self.get_combine_features()
 
-    def get_region_features(self): 
+    def get_region_features(self):
         num_reg = len(self.rlist)
         reg_features = np.zeros([35, num_reg])
         reg_features[0:6] = self.utils.coord[:, 0:6]
@@ -25,7 +26,7 @@ class Features():
         reg_features[17:32] = self.utils.tex_var
         reg_features[32] = self.utils.lbp_var
         reg_features[33] = self.utils.a[:, 0]
-        reg_features[34]  = self.utils.neigh_areas[:, 0]
+        reg_features[34] = self.utils.neigh_areas[:, 0]
         reg_features = reg_features.T
         return reg_features
 
@@ -38,17 +39,21 @@ class Features():
         bkg_features = self.features29[:, -1, :-1]
         bkg_features = bkg_features.T
         return bkg_features
-    
+
     def get_combine_features(self):
         edge_ids = self.utils.edge_neigh
         comb_features = []
-        for ids in edge_ids:
-            comb_features.append(self.features29[:, ids, :-1])
+        for i in range(len(edge_ids)):
+            ids = edge_ids[i]
+            features = np.zeros(29+7, len(ids))
+            features[:29, :] = self.features29[:, i, ids]
+            features[29:, :] = self.utils.edge_prop[i, ids, :].T
+            comb_features.append(features.T)
         return comb_features
 
     def get_29_features(self):
         num_reg = len(self.rlist)
-        features = np.zeros( [29, num_reg+1, num_reg+1] )
+        features = np.zeros([29, num_reg+1, num_reg+1])
         utils = Utils(self.rgb, self.rlist+self.utils.blist, self.rmat)
         dot = utils.dot
         for i in range(9):
