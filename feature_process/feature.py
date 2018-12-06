@@ -9,7 +9,7 @@ class Features():
         self.rgb = cv2.imread(path)
         self.rlist = rlist
         self.rmat = rmat
-        self.utils = Utils(rgb, rlist, rmat)
+        self.utils = Utils(self.rgb, rlist, rmat)
         self.features29 = self.get_29_features()
         self.reg_features = self.get_region_features()
         self.con_features = self.get_contrast_features()

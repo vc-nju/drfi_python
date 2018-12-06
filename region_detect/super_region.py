@@ -76,7 +76,6 @@ class Super_Region():
                     index += 1
                 rlist[index_array[p]][0] += (y,)
                 rlist[index_array[p]][1] += (x,)
-        print(rlist[0])
         region = np.zeros(im.shape[0:2], dtype=np.int32)
         for i in range(len(rlist)):
             region[rlist[i][0], rlist[i][1]] = i
