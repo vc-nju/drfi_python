@@ -82,7 +82,8 @@ class COCO_Utils:
         j = 0
         while(white):
             for i in range(im.shape[1]):
-                white = (im[j, i, 0] == 255) and (im[j, i, 1] == 255) and (im[j, i, 2] == 255)
+                white = (im[j, i, 0] == 255) and (
+                    im[j, i, 1] == 255) and (im[j, i, 2] == 255)
                 if not white:
                     _im[:, :, :] = im[j: img_shape[0] + j, i: img_shape[1] + i, :]
                     break
