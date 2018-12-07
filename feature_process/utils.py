@@ -111,15 +111,16 @@ class Utils():
         """
         return:
             edge_nums: the total edge of Ri, 
-            edge_neigh: the neighbor region of Ri, [(),()]
-            edge_point: the point in edge between Ri and Rj, [[(1,2,...i,),(2,3,...j,)]]
-            the storage sequence may be a bit confusing, good luck!
+            edge_neigh: the neighbor region of Ri, [(R1,R2,R3...), (R1,R2,R3...),]
+            edge_point: the point in edge between Ri and Rj, [[[(y1,y2,...yi,),(x1,x2,...xi,)],[(y1,y2,y3,...),(x1,x2,x3,...)]]]
+            the storage sequence is corrdinated to edge_neigh: for Ri, the nei_point[i][j] means the edge point between Ri and Rj
+            may be a bit confusing, good luck!
         """
         num_reg = self.num_reg
         edge_nums = np.zeros([num_reg, 1])
         edge_neigh = []
         edge_point = []
-        for i in range(num_reg):
+        for i in range(num_reg):#for each region
             num_pix = len(self.rlist[i][0])
             # the neighbor region around region[i]
             edge_neigh.append(())
@@ -134,25 +135,25 @@ class Utils():
                     is_edge = self.rmat[y-1, x] != i or self.rmat[y+1,
                                                                   x] != i or self.rmat[y, x-1] != i or self.rmat[y, x+1] != i
                     if is_edge:
-                        if self.rmat[y-1, x] != i and self.rmat[y-1, x] not in edge_neigh[i]:
+                        if self.rmat[y-1, x] != i and (self.rmat[y-1, x] not in edge_neigh[i]):
                             _neigh = self.rmat[y-1, x]
                             # add the index of neighbor region
                             edge_neigh[i] += (self.rmat[y-1, x],)
-                            edge_point[i] += [(),()]
-                        elif (self.rmat[y+1, x],) != i and self.rmat[y+1, x] not in edge_neigh[i]:
+                            edge_point[i].append([(),()])
+                        elif (self.rmat[y+1, x],) != i and (self.rmat[y+1, x] not in edge_neigh[i]):
                             _neigh = self.rmat[y+1, x]
                             edge_neigh[i] += ((self.rmat[y+1, x]),)
-                            edge_point[i] += [(),()]
-                        elif self.rmat[y, x-1] != i and self.rmat[y, x-1] not in edge_neigh[i]:
+                            edge_point[i].append([(),()])
+                        elif self.rmat[y, x-1] != i and (self.rmat[y, x-1] not in edge_neigh[i]):
                             _neigh = self.rmat[y, x-1]
                             edge_neigh[i] += ((self.rmat[y, x-1]),)
-                            edge_point[i] += [(),()]
-                        elif self.rmat[y, x+1] != i and self.rmat[y, x+1] not in edge_neigh[i]:
+                            edge_point[i].append([(),()])
+                        elif self.rmat[y, x+1] != i and (self.rmat[y, x+1] not in edge_neigh[i]):
                             _neigh = self.rmat[y, x+1]
                             edge_neigh[i] += ((self.rmat[y, x+1]),)
-                            edge_point[i] += [(),()]
+                            edge_point[i].append([(),()])
                         edge_nums[i] += 1
-                        neighbor = edge_neigh.index(_neigh)
+                        neighbor = edge_neigh[i].index(_neigh)
                         edge_point[i][neighbor][0] += (y,)
                         edge_point[i][neighbor][1] += (x,)
         edge_nums /= self.width*self.height
@@ -167,8 +168,8 @@ class Utils():
         num_reg = self.num_reg
         edge_prop = np.zeros((num_reg, num_reg, 7))
         for i in range(num_reg):  # region i
-            for k in range(self.edge_neigh):
-                j = self.edge_neigh[k]  # region j
+            for k in range(len(self.edge_neigh[i])):
+                j = self.edge_neigh[i][k]  # region j
                 # the points in the edge between Ri and Rj
                 edge_ij = self.edge_point[i][k]
                 num_points = len(edge_ij[0])
