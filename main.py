@@ -7,7 +7,7 @@ from feature_process import Features
 if __name__ == "__main__":
     img_type = "train"
     img_id = 0
-    path = "data/{}_origin/{}.jpg".format(img_type, img_id)
+    path = "data/{}_origin/{}.png".format(img_type, img_id)
     rlist, rmat = Super_Region.get_region(path, 166.)
     features = Features(path, rlist, rmat)
     print("reg_feature shape is {}".format(features.reg_features.shape))
