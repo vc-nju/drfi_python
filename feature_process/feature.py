@@ -18,7 +18,7 @@ class Features():
 
     def get_region_features(self):
         num_reg = len(self.rlist)
-        reg_features = np.zeros([35, num_reg])
+        reg_features = np.zeros([num_reg, 35])
         reg_features[0:6] = self.utils.coord[:, 0:6]
         reg_features[6] = self.utils.edge_nums[:, 0]
         reg_features[7] = self.utils.coord[:, 6]

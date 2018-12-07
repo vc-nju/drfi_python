@@ -223,14 +223,14 @@ class Utils():
         blist = [(), ()]
         y = [y_ for y_ in range(15)] + \
             [y_ for y_ in range(self.height-15, self.height)]
-        x = [x_ for x_ in range(self.weight)]
+        x = [x_ for x_ in range(self.width)]
         for y_ in y:
             for x_ in x:
                 blist[0] += (y_,)
                 blist[1] += (x_,)
         y = [y_ for y_ in range(15, self.height - 15)]
         x = [x_ for x_ in range(15)] + \
-            [x_ for x_ in range(self.weight-15, self.weight)]
+            [x_ for x_ in range(self.width-15, self.width)]
         for y_ in y:
             for x_ in x:
                 blist[0] += (y_,)
