@@ -138,15 +138,19 @@ class Utils():
                             _neigh = self.rmat[y-1, x]
                             # add the index of neighbor region
                             edge_neigh[i] += (self.rmat[y-1, x],)
+                            edge_point[i] += [(),()]
                         elif (self.rmat[y+1, x],) != i and self.rmat[y+1, x] not in edge_neigh[i]:
                             _neigh = self.rmat[y+1, x]
                             edge_neigh[i] += ((self.rmat[y+1, x]),)
+                            edge_point[i] += [(),()]
                         elif self.rmat[y, x-1] != i and self.rmat[y, x-1] not in edge_neigh[i]:
                             _neigh = self.rmat[y, x-1]
                             edge_neigh[i] += ((self.rmat[y, x-1]),)
+                            edge_point[i] += [(),()]
                         elif self.rmat[y, x+1] != i and self.rmat[y, x+1] not in edge_neigh[i]:
                             _neigh = self.rmat[y, x+1]
                             edge_neigh[i] += ((self.rmat[y, x+1]),)
+                            edge_point[i] += [(),()]
                         edge_nums[i] += 1
                         neighbor = edge_neigh.index(_neigh)
                         edge_point[i][neighbor][0] += (y,)
