@@ -30,7 +30,7 @@ class Features():
         return reg_features
 
     def get_contrast_features(self):
-        con_features = np.sum(self.features29, axis=1)[:, 0, :-1]
+        con_features = np.sum(self.features29, axis=1)[:, :-1]
         con_features = con_features.T
         return con_features
 
@@ -44,7 +44,7 @@ class Features():
         comb_features = []
         for i in range(len(edge_ids)):
             ids = edge_ids[i]
-            features = np.zeros(29+7, len(ids))
+            features = np.zeros([29+7, len(ids)])
             features[:29, :] = self.features29[:, i, ids]
             features[29:, :] = self.utils.edge_prop[i, ids, :].T
             comb_features.append(features.T)

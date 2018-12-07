@@ -102,8 +102,8 @@ class Utils():
         lbp = local_binary_pattern(gray, 8, 1.)
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
-            avg[i] = np.sum(lbp[self.rlist[i]])/num_pix
-            var[i] = np.sum((lbp[self.rlist[i]] - avg[i])**2)/num_pix
+            avg[i] = np.sum(lbp[tuple(self.rlist[i])])/num_pix
+            var[i] = np.sum((lbp[tuple(self.rlist[i])] - avg[i])**2)/num_pix
         return var, lbp.astype(np.int32)
 
 
