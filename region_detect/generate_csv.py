@@ -14,7 +14,7 @@ class Region2Csv():
         self.neigh = features.utils.edge_neigh
         self.seg_ids = self.get_seg_ids()
         self.in_segs = self.get_in_segs()
-        self.neigh_in_seg
+        self.generate_csv()
 
     def get_seg_ids(self):
         """
