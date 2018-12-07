@@ -19,14 +19,14 @@ class Features():
     def get_region_features(self):
         num_reg = len(self.rlist)
         reg_features = np.zeros([num_reg, 35])
-        reg_features[0:6] = self.utils.coord[:, 0:6]
-        reg_features[6] = self.utils.edge_nums[:, 0]
-        reg_features[7] = self.utils.coord[:, 6]
-        reg_features[8:17] = self.utils.color_var
-        reg_features[17:32] = self.utils.tex_var
-        reg_features[32] = self.utils.lbp_var
-        reg_features[33] = self.utils.a[:, 0]
-        reg_features[34] = self.utils.neigh_areas[:, 0]
+        reg_features[:, 0:6] = self.utils.coord[:, 0:6]
+        reg_features[:, 6] = self.utils.edge_nums[:, 0]
+        reg_features[:, 7] = self.utils.coord[:, 6]
+        reg_features[:, 8:17] = self.utils.color_var
+        reg_features[:, 17:32] = self.utils.tex_var
+        reg_features[:, 32] = self.utils.lbp_var[:, 0]
+        reg_features[:, 33] = self.utils.a[:, 0]
+        reg_features[:, 34] = self.utils.neigh_areas[:, 0]
         return reg_features
 
     def get_contrast_features(self):
