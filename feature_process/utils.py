@@ -66,10 +66,11 @@ class Utils():
         imgchan = np.concatenate([self.rgb, self.lab, self.hsv], axis=2)
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
-            avg[i, :] = np.sum(
-                imgchan[self.rlist[i][0], self.rlist[i][1]]) / num_pix
-            var[i, :] = np.sum(
-                (imgchan[self.rlist[i][0], self.rlist[i][1]] - avg[i, :])**2)/num_pix
+            for j in range(9):
+                avg[i, j] = np.sum(
+                    imgchan[:,:,j][self.rlist[i][0], self.rlist[i][1]]) / num_pix
+                var[i, j] = np.sum(
+                    (imgchan[:,:,j][self.rlist[i][0], self.rlist[i][1]] - avg[i, j])**2)/num_pix
         return var, avg
 
     def get_tex_var(self):
@@ -84,9 +85,10 @@ class Utils():
             tex[:, :, i] = cv2.filter2D(gray, cv2.CV_64F, ml_fiters[:, :, i])
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
-            avg[i] = np.sum(tex[self.rlist[i][0], self.rlist[i][1]])/num_pix
-            var[i] = np.sum(
-                (tex[self.rlist[i][0], self.rlist[i][1]] - avg[i])**2)/num_pix
+            for j in range(15):
+                avg[i,j] = np.sum(tex[:,:,j][self.rlist[i][0], self.rlist[i][1]])/num_pix
+                var[i,j] = np.sum(
+                    (tex[:,:,j][self.rlist[i][0], self.rlist[i][1]] - avg[i,j])**2)/num_pix
         for i in range(15):
             tex_max = np.max(tex[:, :, i])
             tex_min = np.min(tex[:, :, i])
@@ -215,7 +217,7 @@ class Utils():
 
     def get_a(self):
         a = np.zeros([self.num_reg, 1])
-        a[:, 0] = [float(len(r))/float(self.width*self.height)
+        a[:, 0] = [float(len(r[0]))/float(self.width*self.height)
                    for r in self.rlist]
         return np.array(a)
 
