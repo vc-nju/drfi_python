@@ -7,9 +7,9 @@ from .utils import Utils
 class Features():
     def __init__(self, path, rlist, rmat):
         self.rgb = cv2.imread(path)
-        self.rlist = rlist
+        self.rlist = rlist.append(Utils.get_background(self.rgb.shape[0], self.rgb.shape[1]))
         self.rmat = rmat
-        self.utils = Utils(self.rgb, rlist, rmat)
+        self.utils = Utils(self.rgb, self.rlist, self.rmat)
         self.features29 = self.get_29_features()
         self.reg_features = self.get_region_features()
         self.con_features = self.get_contrast_features()
@@ -18,15 +18,15 @@ class Features():
 
     def get_region_features(self):
         num_reg = len(self.rlist)
-        reg_features = np.zeros([num_reg, 35])
-        reg_features[:, 0:6] = self.utils.coord[:, 0:6]
-        reg_features[:, 6] = self.utils.edge_nums[:, 0]
-        reg_features[:, 7] = self.utils.coord[:, 6]
-        reg_features[:, 8:17] = self.utils.color_var
-        reg_features[:, 17:32] = self.utils.tex_var
-        reg_features[:, 32] = self.utils.lbp_var[:, 0]
-        reg_features[:, 33] = self.utils.a[:, 0]
-        reg_features[:, 34] = self.utils.neigh_areas[:, 0]
+        reg_features = np.zeros([num_reg-1, 35])
+        reg_features[:, 0:6] = self.utils.coord[:-1, 0:6]
+        reg_features[:, 6] = self.utils.edge_nums[:-1, 0]
+        reg_features[:, 7] = self.utils.coord[:-1, 6]
+        reg_features[:, 8:17] = self.utils.color_var[:-1]
+        reg_features[:, 17:32] = self.utils.tex_var[:-1]
+        reg_features[:, 32] = self.utils.lbp_var[:-1, 0]
+        reg_features[:, 33] = self.utils.a[:-1, 0]
+        reg_features[:, 34] = self.utils.neigh_areas[:-1, 0]
         return reg_features
 
     def get_contrast_features(self):
@@ -53,7 +53,8 @@ class Features():
     def get_29_features(self):
         num_reg = len(self.rlist)
         features = np.zeros([29, num_reg+1, num_reg+1])
-        utils = Utils(self.rgb, self.rlist+self.utils.blist, self.rmat)
+        #utils = Utils(self.rgb, self.rlist+self.utils.blist, self.rmat)
+        utils = self.utils
         dot = utils.dot
         for i in range(9):
             features[i] = dot(utils.color_avg[:, i])

@@ -3,7 +3,11 @@ import numpy as np
 from skimage.feature import local_binary_pattern
 
 from .lmfilter import make_lmfilter
-
+import time
+def tt(t):
+    s = time.time()
+    print(s-t)
+    return s
 
 class Utils():
     def __init__(self, rgb, rlist, rmat):
@@ -13,20 +17,32 @@ class Utils():
         self.rlist = rlist
         self.rmat = rmat
         self.rgb = rgb
+        t = time.time()
         self.lab = self.get_lab()
+        t = tt(t)
         self.hsv = self.get_hsv()
+        t = tt(t)
         self.coord = self.get_coord()
+        t = tt(t)
         self.color_var, self.color_avg = self.get_color_var()
+        t = tt(t)
         self.tex_var, self.tex_avg, self.tex = self.get_tex_var()
+        t = tt(t)
         self.lbp_var, self.lbp = self.get_lbp_var()
+        t = tt(t)
         # the number and the neighbor region of region[i]
         self.edge_nums, self.edge_neigh, self.edge_point = self.get_edge_nums()
+        t = tt(t)
         self.edge_prop = self.get_edge_prop()
+        t = tt(t)
         self.neigh_areas = self.get_neigh_areas()
+        t = tt(t)
         self.w = self.get_w()
+        t = tt(t)
         self.a = self.get_a()
+        t = tt(t)
         self.blist = self.get_background()
-
+        t = tt(t)
     def get_lab(self):
         lab = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2Lab)
         return lab
@@ -134,8 +150,7 @@ class Utils():
                 if x == 0 or x == (self.width-1) or y == 0 or y == (self.height-1):
                     edge_nums[i] += 1
                 else:
-                    is_edge = self.rmat[y-1, x] != i or self.rmat[y+1,
-                                                                  x] != i or self.rmat[y, x-1] != i or self.rmat[y, x+1] != i
+                    is_edge = self.rmat[y-1, x] != i or self.rmat[y+1,x] != i or self.rmat[y, x-1] != i or self.rmat[y, x+1] != i
                     if is_edge:
                         if self.rmat[y-1, x] != i and (self.rmat[y-1, x] not in edge_neigh[i]):
                             _neigh = self.rmat[y-1, x]
@@ -144,7 +159,7 @@ class Utils():
                             edge_point[i].append([(),()])
                         elif (self.rmat[y+1, x],) != i and (self.rmat[y+1, x] not in edge_neigh[i]):
                             _neigh = self.rmat[y+1, x]
-                            edge_neigh[i] += ((self.rmat[y+1, x]),)
+                            edge_neigh[i] +get_background= ((self.rmat[y+1, x]),)
                             edge_point[i].append([(),()])
                         elif self.rmat[y, x-1] != i and (self.rmat[y, x-1] not in edge_neigh[i]):
                             _neigh = self.rmat[y, x-1]
@@ -158,6 +173,7 @@ class Utils():
                         neighbor = edge_neigh[i].index(_neigh)
                         edge_point[i][neighbor][0] += (y,)
                         edge_point[i][neighbor][1] += (x,)
+        print(edge_neigh)
         edge_nums /= self.width*self.height
         return edge_nums, edge_neigh, edge_point
 
@@ -207,11 +223,12 @@ class Utils():
         for i in range(num_reg):
             reg_array = np.array(self.rlist[i])
             pos[i, :] = np.sum(reg_array, axis=1) / reg_array.shape[1]
+        pos[:,0] /= self.height
+        pos[:,1] /= self.width 
         w = np.zeros([num_reg, num_reg])
         for i in range(num_reg):
             for j in range(num_reg):
-                diff = (pos[i] - pos[j])**2
-                diff = np.sum(diff)
+                diff = (pos[i][0] - pos[j][0])**2 + (pos[i][1] - pos[j][1])**2
                 w[i, j] = np.exp(-1. * diff / 2)
         return w
 
@@ -220,19 +237,20 @@ class Utils():
         a[:, 0] = [float(len(r[0]))/float(self.width*self.height)
                    for r in self.rlist]
         return np.array(a)
-
-    def get_background(self):
+    
+    @staticmethod
+    def get_background(height, width):
         blist = [(), ()]
         y = [y_ for y_ in range(15)] + \
-            [y_ for y_ in range(self.height-15, self.height)]
-        x = [x_ for x_ in range(self.width)]
+            [y_ for y_ in range(height-15, height)]
+        x = [x_ for x_ in range(width)]
         for y_ in y:
             for x_ in x:
                 blist[0] += (y_,)
                 blist[1] += (x_,)
-        y = [y_ for y_ in range(15, self.height - 15)]
+        y = [y_ for y_ in range(15, height - 15)]
         x = [x_ for x_ in range(15)] + \
-            [x_ for x_ in range(self.width-15, self.width)]
+            [x_ for x_ in range(width-15, width)]
         for y_ in y:
             for x_ in x:
                 blist[0] += (y_,)
