@@ -78,5 +78,6 @@ class Super_Region():
                 rlist[index_array[p]][1] += (x,)
         region = np.zeros(im.shape[0:2], dtype=np.int32)
         for i in range(len(rlist)):
-            region[rlist[i][0], rlist[i][1]] = i
+            rlist[i] = tuple(rlist[i])
+            region[rlist[i]] = i
         return rlist, region
