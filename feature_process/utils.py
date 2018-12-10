@@ -68,9 +68,9 @@ class Utils():
             num_pix = len(self.rlist[i][0])
             for j in range(9):
                 avg[i, j] = np.sum(
-                    imgchan[:,:,j][self.rlist[i][0], self.rlist[i][1]]) / num_pix
+                    imgchan[:,:,j][self.rlist[i]) / num_pix
                 var[i, j] = np.sum(
-                    (imgchan[:,:,j][self.rlist[i][0], self.rlist[i][1]] - avg[i, j])**2)/num_pix
+                    (imgchan[:,:,j][self.rlist[i]] - avg[i, j])**2)/num_pix
         return var, avg
 
     def get_tex_var(self):
@@ -86,9 +86,9 @@ class Utils():
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
             for j in range(15):
-                avg[i,j] = np.sum(tex[:,:,j][self.rlist[i][0], self.rlist[i][1]])/num_pix
+                avg[i,j] = np.sum(tex[:,:,j][self.rlist[i]])/num_pix
                 var[i,j] = np.sum(
-                    (tex[:,:,j][self.rlist[i][0], self.rlist[i][1]] - avg[i,j])**2)/num_pix
+                    (tex[:,:,j][self.rlist[i]] - avg[i,j])**2)/num_pix
         for i in range(15):
             tex_max = np.max(tex[:, :, i])
             tex_min = np.min(tex[:, :, i])
@@ -256,7 +256,7 @@ class Utils():
         num_reg = self.num_reg
         hist = np.ones([num_reg, 256])
         for i in range(num_reg):
-            hist[i][color[self.rlist[i][0], self.rlist[i][1]]] += 1
+            hist[i][color[self.rlist[i]]] += 1
         mat = np.zeros([num_reg, num_reg])
         for i in range(num_reg):
             for j in range(num_reg):

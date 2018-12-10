@@ -63,7 +63,7 @@ class Region2Csv():
             | img_id | seg_id | region_id i | region_id j | is same_region | 222-dim features |
         """
         data = []
-        line_data = np.zeros(1, 1 + 1 + 2 + 1 + 222)
+        line_data = np.zeros([1, 5 + 222])
         for seg_id in self.seg_ids:
             for region_i in range(len(self.rlist)):
                 for region_j in self.neigh[region_i]:
