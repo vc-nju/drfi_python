@@ -13,10 +13,6 @@ from skimage.feature import local_binary_pattern
 
 from .LM_filters import makeLMfilters
 
-import time
-def df(i, t):
-    print(i, time.time() - t)
-    return i+1, time.time()
 
 class Utils():
     '''
@@ -42,18 +38,11 @@ class Utils():
         self.color_avg, self.color_var = self.get_avg_var(imgchan)
         self.tex_avg, self.tex_var = self.get_avg_var(self.tex)
         self.lbp_avg, self.lbp_var = self.get_avg_var(self.lbp)
-        i = 1
-        t = time.time()
         self.edge_nums, self.edge_neigh, self.edge_point = self.get_edges()
-        i,t = df(i, t)
         self.edge_prop = self.get_edge_prop()
-        i,t = df(i, t)
         self.neigh_areas = self.get_neigh_areas()
-        i,t = df(i, t)
         self.w = self.get_w()
-        i,t = df(i, t)
         self.a = self.get_a()
-        i,t = df(i, t)
 
     def get_tex(self):
         num_reg = len(self.rlist)

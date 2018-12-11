@@ -34,7 +34,7 @@ class Features():
         _list.append(Utils.get_background(self.rgb.shape[0], self.rgb.shape[1]))
         self.rmat = rmat
         self.utils = Utils(self.rgb, _list, self.rmat)
-        # self.features29 = self.get_29_features()
+        self.features29 = self.get_29_features()
         self.reg_features = self.get_region_features()
         self.con_features = self.get_contrast_features()
         self.bkp_features = self.get_background_features()
