@@ -156,7 +156,12 @@ class Utils():
             edge_nums.append(num)
             assert(len(neighs) != 0)
             edge_neigh.append(neighs)
-            edge_point.append(points)
+            _points = [[(), ()] for i in range(len(neighs))]
+            for p in points:
+                index = p["neigh_id"]
+                _points[index][0] += (p["point"][0],)
+                _points[index][1] += (p["point"][1],)
+            edge_point.append(_points)
         return edge_nums, edge_neigh, edge_point
 
 
