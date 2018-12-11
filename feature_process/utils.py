@@ -36,7 +36,7 @@ class Utils():
         self.color_avg, self.color_var = self.get_avg_var(imgchan)
         self.tex_avg, self.tex_var = self.get_avg_var(self.tex)
         self.lbp_avg, self.lbp_var = self.get_avg_var(self.lbp)
-        self.edge_nums, self.edge_neigh, self.edge_point = self.get_edge_nums()
+        self.edge_nums, self.edge_neigh, self.edge_point = self.get_edges()
         self.edge_prop = self.get_edge_prop()
         self.neigh_areas = self.get_neigh_areas()
         self.w = self.get_w()
@@ -61,7 +61,9 @@ class Utils():
         num_reg = len(self.rlist)
         gray = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2GRAY)
         lbp = local_binary_pattern(gray, 8, 1.).astype(np.int32)
-        return lbp
+        _lbp = np.zeros((lbp.shape[0],lbp.shape[1],1))
+        _lbp[:,:,0] = lbp
+        return _lbp
 
     def get_coord(self):
         '''
@@ -158,10 +160,12 @@ class Utils():
             edge_neigh.append(neighs)
             _points = [[(), ()] for i in range(len(neighs))]
             for p in points:
-                index = p["neigh_id"]
+                #index = p["neigh_id"]
+                index = neighs.index(p["neigh_id"])
                 _points[index][0] += (p["point"][0],)
                 _points[index][1] += (p["point"][1],)
             edge_point.append(_points)
+       
         return edge_nums, edge_neigh, edge_point
 
 
@@ -196,11 +200,11 @@ class Utils():
         num_reg = len(self.rlist)
         neigh_areas = np.zeros([num_reg, 1])
         sigmadist = 0.4
-        for i in range(num_reg):
-            for j in range(num_reg):
+        for i in range(num_reg - 1):
+            for j in range(num_reg - 1):
                 diff = (self.coord[i][0:2] - self.coord[j][0:2])**2
                 diff = np.sum(diff)
-                neigh_areas[i] += np.exp(-1*diff/sigmadist)
+                neigh_areas[i] += np.exp(-1*diff/sigmadist)*(len(self.rlist[j][0]))
         neigh_areas /= self.width*self.height
         return neigh_areas
 
@@ -242,7 +246,7 @@ class Utils():
             for x_ in x:
                 blist[0] += (y_,)
                 blist[1] += (x_,)
-        return [blist]
+        return tuple(blist)
 
     def ml_kernal(self):
         ml_filters = makeLMfilters()

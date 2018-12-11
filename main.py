@@ -1,15 +1,15 @@
 import cv2
 import numpy as np
-'''
-import pickle
-_file = open('./rlist.rlist','rb')
-rlist = pickle.load(_file)
-_file.close()
-f = open('./rmat.rmat','rb')
-rmat = pickle.load(f)
-f.close()
-'''
-from test_edges import get_edges
+
+# import pickle
+# _file = open('./rlist.rlist','rb')
+# rlist = pickle.load(_file)
+# _file.close()
+# f = open('./rmat.rmat','rb')
+# rmat = pickle.load(f)
+# f.close()
+
+#from test_edges import get_edges
 from region_detect import Super_Region #generate_coco_data
 from feature_process import Features
 
@@ -18,10 +18,8 @@ if __name__ == "__main__":
     img_id = 0
     path = "data/{}_origin/{}.png".format(img_type, img_id)
     rlist, rmat = Super_Region.get_region(path, 300.)
-    #np.set_printoptions(threshold=np.NaN)
-    #print(rmat)
-    #features = Features(path, rlist, rmat)
-    e_num, e_neigh, e_point = get_edges(rmat,rlist)
+    np.set_printoptions(threshold=np.NaN)
+    features = Features(path, rlist, rmat)
     #print(features.reg_features)
     #print(features.con_features)
     #print(features.bkp_features)

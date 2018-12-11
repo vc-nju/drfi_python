@@ -28,8 +28,8 @@ class Features():
         @return: None
         '''
         self.rgb = cv2.imread(path)
-        self.rlist = rlist.append(Utils.get_background(
-            self.rgb.shape[0], self.rgb.shape[1]))
+        self.rlist = rlist
+        self.rlist.append(Utils.get_background(self.rgb.shape[0], self.rgb.shape[1]))
         self.rmat = rmat
         self.utils = Utils(self.rgb, self.rlist, self.rmat)
         self.features29 = self.get_29_features()
@@ -47,7 +47,7 @@ class Features():
         num_reg = len(self.rlist) - 1
         reg_features = np.zeros([num_reg, 35])
         reg_features[:, 0:6] = self.utils.coord[:-1, 0:6]
-        reg_features[:, 6] = self.utils.edge_nums[:-1, 0]
+        reg_features[:, 6] = self.utils.edge_nums[:-1]
         reg_features[:, 7] = self.utils.coord[:-1, 6]
         reg_features[:, 8:17] = self.utils.color_var[:-1]
         reg_features[:, 17:32] = self.utils.tex_var[:-1]
@@ -110,5 +110,6 @@ class Features():
         for i in range(15):
             features[i+12] = dot(self.utils.tex_avg[:, i])
         features[27] = dot(self.utils.tex, hist=True)
-        features[28] = dot(self.utils.lbp, hist=True)
+        #print(np.int16(self.utils.lbp))
+        features[28] = dot(np.int16(self.utils.lbp), hist=True)
         return features
