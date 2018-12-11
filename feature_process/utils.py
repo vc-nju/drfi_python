@@ -83,8 +83,7 @@ class Utils():
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
             for j in range(9):
-                avg[i, j] = np.sum(
-                    imgchan[:,:,j][self.rlist[i]) / num_pix
+                avg[i, j] = np.sum(imgchan[:,:,j][self.rlist[i]]) / num_pix
                 var[i, j] = np.sum(
                     (imgchan[:,:,j][self.rlist[i]] - avg[i, j])**2)/num_pix
         return var, avg
@@ -159,7 +158,7 @@ class Utils():
                             edge_point[i].append([(),()])
                         elif (self.rmat[y+1, x],) != i and (self.rmat[y+1, x] not in edge_neigh[i]):
                             _neigh = self.rmat[y+1, x]
-                            edge_neigh[i] +get_background= ((self.rmat[y+1, x]),)
+                            edge_neigh[i] = ((self.rmat[y+1, x]),)
                             edge_point[i].append([(),()])
                         elif self.rmat[y, x-1] != i and (self.rmat[y, x-1] not in edge_neigh[i]):
                             _neigh = self.rmat[y, x-1]
