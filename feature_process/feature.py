@@ -34,7 +34,7 @@ class Features():
         _list.append(Utils.get_background(self.rgb.shape[0], self.rgb.shape[1]))
         self.rmat = rmat
         self.utils = Utils(self.rgb, _list, self.rmat)
-        self.features29 = self.get_29_features()
+        # self.features29 = self.get_29_features()
         self.reg_features = self.get_region_features()
         self.con_features = self.get_contrast_features()
         self.bkp_features = self.get_background_features()
@@ -55,7 +55,7 @@ class Features():
         reg_features[:, 17:32] = self.utils.tex_var[:-1]
         reg_features[:, 32] = self.utils.lbp_var[:-1, 0]
         reg_features[:, 33] = self.utils.a[:-1, 0]
-        reg_features[:, 34] = self.utils.neigh_areas[:-1, 0]
+        reg_features[:, 34] = self.utils.neigh_areas[:-1]
         return reg_features
 
     def get_contrast_features(self):

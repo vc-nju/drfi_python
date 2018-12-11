@@ -43,6 +43,7 @@ def get_anns(img_type, img_num):
         except:
             continue
         path = 'data/{}_origin/{}.png'.format(img_type, counter)
+        I[:,:,[0, 2]] = I[:,:,[2,0]]
         cv2.imwrite(path, I)
         path = "data/{}_coco2pic/{}".format(img_type, counter)
         COCO_Utils.coco2pic(I, anns, path)

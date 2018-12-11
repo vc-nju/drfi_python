@@ -16,17 +16,19 @@ class Super_Region():
     @staticmethod
     def get_edges(im):
         edges = []
-        for y in range(im.shape[0]):
-            for x in range(im.shape[1]):
+        height = im.shape[0]
+        width = im.shape[1]
+        for y in range(height):
+            for x in range(width):
                 p1 = [y, x]
                 p2_list = []
-                if x < im.shape[1] - 1:
+                if x < width - 1:
                     p2_list.append([y, x+1])
-                if y < im.shape[0] - 1:
+                if y < height - 1:
                     p2_list.append([y+1, x])
-                if x < im.shape[1] - 1 and y < im.shape[0] - 1:
+                if x < width - 1 and y < height - 1:
                     p2_list.append([y+1, x+1])
-                if x < im.shape[1] - 1 and y > 0:
+                if x < width - 1 and y > 0:
                     p2_list.append([y-1, x+1])
                 if not p2_list:
                     pass
@@ -51,12 +53,14 @@ class Super_Region():
         """
         im = Super_Region.guass_filter(path)
         edges = Super_Region.get_edges(im)
-        im_size = im.shape[0]*im.shape[1]
+        height = im.shape[0]
+        width = im.shape[1]
+        im_size = height * width
         u = Universe(im_size)
         thresholds = np.ones(im_size) * c
         for e in edges:
-            a = e.a[0] * im.shape[0] + e.a[1]
-            b = e.b[0] * im.shape[0] + e.b[1]
+            a = e.a[0] * width + e.a[1]
+            b = e.b[0] * width + e.b[1]
             a = u.find(a)
             b = u.find(b)
             if a != b and e.weight <= thresholds[a] and e.weight <= thresholds[b]:
@@ -67,9 +71,9 @@ class Super_Region():
         index = 0
         # use index_array to map the p to index
         index_array = np.ones(im_size, dtype=np.int32)*-1
-        for y in range(im.shape[0]):
-            for x in range(im.shape[1]):
-                p = u.find(y * im.shape[0] + x)
+        for y in range(height):
+            for x in range(width):
+                p = u.find(y * width + x)
                 if index_array[p] == -1:
                     index_array[p] = index
                     rlist.append([(), ()])

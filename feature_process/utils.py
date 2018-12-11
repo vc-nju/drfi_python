@@ -13,12 +13,18 @@ from skimage.feature import local_binary_pattern
 
 from .LM_filters import makeLMfilters
 
+import time
+def df(i, t):
+    print(i, time.time() - t)
+    return i+1, time.time()
+
 class Utils():
     '''
     @description: Utils class using to geneate features.
     @param {img rgb, region lists, region matrix} 
     @return: Utils class
     '''
+
     def __init__(self, rgb, rlist, rmat):
         '''
         @description: The init of Utils class.
@@ -27,7 +33,7 @@ class Utils():
         '''
         self.height, self.width = rmat.shape
         self.rgb, self.rlist, self.rmat = rgb, rlist, rmat
-        self.lab =  cv2.cvtColor(rgb, cv2.COLOR_RGB2Lab)
+        self.lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2Lab)
         self.hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
         self.tex = self.get_tex()
         self.lbp = self.get_lbp()
@@ -36,11 +42,18 @@ class Utils():
         self.color_avg, self.color_var = self.get_avg_var(imgchan)
         self.tex_avg, self.tex_var = self.get_avg_var(self.tex)
         self.lbp_avg, self.lbp_var = self.get_avg_var(self.lbp)
+        i = 1
+        t = time.time()
         self.edge_nums, self.edge_neigh, self.edge_point = self.get_edges()
+        i,t = df(i, t)
         self.edge_prop = self.get_edge_prop()
+        i,t = df(i, t)
         self.neigh_areas = self.get_neigh_areas()
+        i,t = df(i, t)
         self.w = self.get_w()
+        i,t = df(i, t)
         self.a = self.get_a()
+        i,t = df(i, t)
 
     def get_tex(self):
         num_reg = len(self.rlist)
@@ -61,8 +74,8 @@ class Utils():
         num_reg = len(self.rlist)
         gray = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2GRAY)
         lbp = local_binary_pattern(gray, 8, 1.).astype(np.int32)
-        _lbp = np.zeros((lbp.shape[0],lbp.shape[1],1))
-        _lbp[:,:,0] = lbp
+        _lbp = np.zeros((lbp.shape[0], lbp.shape[1], 1))
+        _lbp[:, :, 0] = lbp
         return _lbp
 
     def get_coord(self):
@@ -101,8 +114,9 @@ class Utils():
         for i in range(num_reg):
             num_pix = len(self.rlist[i][0])
             for j in range(a.shape[2]):
-                avg[i, j] = np.sum(a[:,:,j][self.rlist[i]]) / num_pix
-                var[i, j] = np.sum((a[:,:,j][self.rlist[i]] - avg[i, j])**2)/num_pix
+                avg[i, j] = np.sum(a[:, :, j][self.rlist[i]]) / num_pix
+                var[i, j] = np.sum(
+                    (a[:, :, j][self.rlist[i]] - avg[i, j])**2)/num_pix
         return avg, var
 
     def get_edges(self):
@@ -127,21 +141,25 @@ class Utils():
         edge_mat[:-1, 1:, 5] += (rmat[1:, :-1] - rmat[:-1, 1:])
         edge_mat[1:, :-1, 6] += (rmat[:-1, 1:] - rmat[1:, :-1])
         edge_mat[1:, 1:, 7] += (rmat[:-1, :-1] - rmat[1:, 1:])
-        edge_mat[edge_mat!=0] = 1
-        generate_y_list = lambda y: [y+1, y-1, y, y, y+1, y+1, y-1, y-1]
-        generate_x_list = lambda x: [x, x, x+1, x-1, x+1, x-1, x+1, x-1]
+        edge_mat[edge_mat != 0] = 1
+
+        def generate_y_list(y): return [y+1, y-1, y, y, y+1, y+1, y-1, y-1]
+
+        def generate_x_list(x): return [x, x, x+1, x-1, x+1, x-1, x+1, x-1]
         shape = (rmat.shape[0], rmat.shape[1], 2, 8)
         y_x = np.zeros(shape, dtype=np.int32)
         for y in range(shape[0]):
             for x in range(shape[1]):
-                y_x[y,x,0,:] = generate_y_list(y)
-                y_x[y,x,1,:] = generate_x_list(x)
+                y_x[y, x, 0, :] = generate_y_list(y)
+                y_x[y, x, 1, :] = generate_x_list(x)
         edge_nums = []
         edge_neigh = []
         edge_point = []
-        append_not_exist = lambda x, _list: _list.append(x) if x not in _list else _list
+
+        def append_not_exist(x, _list): return _list.append(
+            x) if x not in _list else _list
         for region in rlist:
-            num = 0
+            num = 0.
             neighs = []
             points = []
             for y, x in zip(region[0], region[1]):
@@ -149,25 +167,24 @@ class Utils():
                     if edge_mat[y, x, edge_direct] != 0:
                         y_ = y_x[y, x, 0, edge_direct]
                         x_ = y_x[y, x, 1, edge_direct]
-                        num += 1
+                        num += 1.
                         neigh_id = rmat[y_, x_]
                         if neigh_id not in neighs:
                             neighs.append(neigh_id)
-                        p = {"neigh_id":neigh_id, "point":(y_, x_,)}
+                        p = {"neigh_id": neigh_id, "point": (y_, x_,)}
                         points.append(p)
             edge_nums.append(num)
             assert(len(neighs) != 0)
             edge_neigh.append(neighs)
             _points = [[(), ()] for i in range(len(neighs))]
             for p in points:
-                #index = p["neigh_id"]
                 index = neighs.index(p["neigh_id"])
                 _points[index][0] += (p["point"][0],)
                 _points[index][1] += (p["point"][1],)
             edge_point.append(_points)
-       
+        max_edge_num = max(edge_nums)
+        edge_nums = [edge/max_edge_num for edge in edge_nums]
         return edge_nums, edge_neigh, edge_point
-
 
     def get_edge_prop(self):
         """
@@ -198,13 +215,16 @@ class Utils():
 
     def get_neigh_areas(self):
         num_reg = len(self.rlist)
-        neigh_areas = np.zeros([num_reg, 1])
+        diff = np.zeros([num_reg, num_reg])
         sigmadist = 0.4
         for i in range(num_reg - 1):
             for j in range(num_reg - 1):
-                diff = (self.coord[i][0:2] - self.coord[j][0:2])**2
-                diff = np.sum(diff)
-                neigh_areas[i] += np.exp(-1*diff/sigmadist)*(len(self.rlist[j][0]))
+                diff[i, j] = np.sum(
+                    (self.coord[i][0:2] - self.coord[j][0:2])**2)
+        diff = np.exp(-1*diff/sigmadist)
+        for j in range(diff.shape[1]):
+            diff[:, j] *= len(self.rlist[j][0])
+        neigh_areas = np.sum(diff, axis=0)
         neigh_areas /= self.width*self.height
         return neigh_areas
 
@@ -213,14 +233,16 @@ class Utils():
         pos = np.zeros([num_reg, 2])
         for i in range(num_reg):
             reg_array = np.array(self.rlist[i])
+
             pos[i, :] = np.sum(reg_array, axis=1) / reg_array.shape[1]
-        pos[:,0] /= self.height
-        pos[:,1] /= self.width 
-        w = np.zeros([num_reg, num_reg])
+        pos[:, 0] /= self.height
+        pos[:, 1] /= self.width
+        diff = np.zeros([num_reg, num_reg])
         for i in range(num_reg):
             for j in range(num_reg):
-                diff = (pos[i][0] - pos[j][0])**2 + (pos[i][1] - pos[j][1])**2
-                w[i, j] = np.exp(-1. * diff / 2)
+                diff[i, j] = (pos[i][0] - pos[j][0])**2 + \
+                    (pos[i][1] - pos[j][1])**2
+        w = np.exp(-1. * diff / 2)
         return w
 
     def get_a(self):
@@ -228,7 +250,7 @@ class Utils():
         a[:, 0] = [float(len(r[0]))/float(self.width*self.height)
                    for r in self.rlist]
         return np.array(a)
-    
+
     @staticmethod
     def get_background(height, width):
         blist = [(), ()]
