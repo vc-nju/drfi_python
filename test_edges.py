@@ -7,7 +7,7 @@ def get_edges(rmat, rlist):
     @return: edge_nums: the total edge of Ri, 
              edge_neigh: the neighbor region of Ri, [(R1,R2,R3...), (R1,R2,R3...),]
              edge_point: the point in edge between Ri and Rj, [[[(y1,y2,...yi,),(x1,x2,...xi,)],[(y1,y2,y3,...),(x1,x2,x3,...)]]]
-             the storage sequence is corrdinated to edge_neigh: for Ri, the nei_point[i][j] means the edge point between Ri and Rj
+             the storage sequence is coordinated to edge_neigh: for Ri, the nei_point[i][j] means the edge point between Ri and Rj
              may be a bit confusing, good luck!
     '''
     shape = (rmat.shape[0], rmat.shape[1], 8, )
@@ -59,7 +59,7 @@ def get_edges(rmat, rlist):
         edge_point.append(tuple(_points))
     # edge_nums /= self.width*self.height
     return edge_nums, edge_neigh, edge_point
-
+'''
 if __name__ == "__main__":
     with open("rlist.rlist", "rb+") as file:
         rlist = pickle.load(file)
@@ -70,3 +70,4 @@ if __name__ == "__main__":
     a = time.time()
     _, _ , _ = get_edges(rmat, rlist)
     print(time.time() - a)
+'''

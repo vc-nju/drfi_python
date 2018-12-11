@@ -4,7 +4,7 @@
 @Github: https://github.com/lizhihao6
 @Date: 2018-11-28 17:02:30
 @LastEditors: lizhihao6
-@LastEditTime: 2018-12-11 03:14:54
+@LastEditTime: 2018-12-11 18:11:56
 '''
 
 import cv2
@@ -41,7 +41,6 @@ class Utils():
         self.neigh_areas = self.get_neigh_areas()
         self.w = self.get_w()
         self.a = self.get_a()
-        self.blist = self.get_background()
 
     def get_tex(self):
         num_reg = len(self.rlist)
