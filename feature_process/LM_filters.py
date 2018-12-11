@@ -1,4 +1,4 @@
-"""
+'''
 Code Reference: https://github.com/CVDLBOT/LM_filter_bank_python_code
 
 The Leung-Malik (LM) Filter Bank, implementation in python
@@ -6,14 +6,19 @@ T. Leung and J. Malik. Representing and recognizing the visual appearance of
 materials using three-dimensional textons. International Journal of Computer
 Vision, 43(1):29-44, June 2001.
 Reference: http://www.robots.ox.ac.uk/~vgg/research/texclass/filters.html
-"""
+'''
 import numpy as np
 
+
 def gaussian1d(sigma, mean, x, ord):
+    '''
+    @description: Using to do gaussian1d.
+    @param {sigma, mean, x, ord} 
+    @return: Gaussian1d result
+    '''
     x = np.array(x)
     x_ = x - mean
     var = sigma**2
-    # Gaussian Function
     g = (1/np.sqrt(2*np.pi*var))*(np.exp((-1*x_*x_)/(2*var)))
     if ord == 0:
         g = g
@@ -25,6 +30,11 @@ def gaussian1d(sigma, mean, x, ord):
 
 
 def gaussian2d(sup, scales):
+    '''
+    @description: Using to do gaussian2d.
+    @param {sup, scales} 
+    @return: Gaussian2d result
+    '''
     var = scales * scales
     shape = (sup, sup)
     n, m = [(i - 1)/2 for i in shape]
@@ -34,6 +44,11 @@ def gaussian2d(sup, scales):
 
 
 def log2d(sup, scales):
+    '''
+    @description: Function of log2d.
+    @param {sup, scales} 
+    @return: Log2d result
+    '''
     var = scales * scales
     shape = (sup, sup)
     n, m = [(i - 1)/2 for i in shape]
@@ -44,6 +59,11 @@ def log2d(sup, scales):
 
 
 def makefilter(scale, phasex, phasey, pts, sup):
+    '''
+    @description: A signle filter function
+    @param {scale, phasex, phasey, pts, sup} 
+    @return: Image after filter.
+    '''
     gx = gaussian1d(3*scale, 0, pts[0, ...], phasex)
     gy = gaussian1d(scale,   0, pts[1, ...], phasey)
     image = gx*gy
@@ -52,6 +72,11 @@ def makefilter(scale, phasex, phasey, pts, sup):
 
 
 def makeLMfilters():
+    '''
+    @description: Generate LMfilters.
+    @param {None} 
+    @return: LMfilters
+    '''
     sup = 49
     scalex = np.sqrt(2) * np.array([1, 2, 3])
     norient = 6
@@ -89,9 +114,4 @@ def makeLMfilters():
     for i in range(len(scales)):
         F[:, :, count] = log2d(sup, 3*scales[i])
         count = count + 1
-    return F
-
-
-def make_lmfilter():
-    F = makeLMfilters()
     return F
