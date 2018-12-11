@@ -113,6 +113,8 @@ class Utils():
                  the storage sequence is corrdinated to edge_neigh: for Ri, the nei_point[i][j] means the edge point between Ri and Rj
                  may be a bit confusing, good luck!
         '''
+        rmat = self.rmat
+        rlist = self.rlist
         shape = (rmat.shape[0], rmat.shape[1], 8, )
         edge_mat = np.zeros(shape, dtype=np.int32)
         edge_mat[:-1, :, 0] += (rmat[1:, :] - rmat[:-1, :])
@@ -149,18 +151,12 @@ class Utils():
                         neigh_id = rmat[y_, x_]
                         if neigh_id not in neighs:
                             neighs.append(neigh_id)
-                        p = (y_, x_,)
-                        if p not in points:
-                            points.append(p)
+                        p = {"neigh_id":neigh_id, "point":(y_, x_,)}
+                        points.append(p)
             edge_nums.append(num)
             assert(len(neighs) != 0)
             edge_neigh.append(neighs)
-            _points = [(),()]
-            for i in range(len(points)):
-                _points[0] += (points[i][0],)
-                _points[1] += (points[i][1],)
-            edge_point.append(tuple(_points))
-        # edge_nums /= self.width*self.height
+            edge_point.append(points)
         return edge_nums, edge_neigh, edge_point
 
 
