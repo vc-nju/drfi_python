@@ -12,7 +12,6 @@ import numpy as np
 
 from .utils import Utils
 
-
 class Features():
     '''
     @description:  Using region lists and region matrix to calculate super regions features.
@@ -64,7 +63,7 @@ class Features():
         @param {None} 
         @return: Contrast features
         '''
-        con_features = np.sum(self.features29, axis=1)[:, :-1]
+        con_features = np.sum(self.features29, axis=1)[:, :-1] / len(self.rlist)
         con_features = con_features.T
         return con_features
 

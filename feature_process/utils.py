@@ -13,6 +13,9 @@ from skimage.feature import local_binary_pattern
 
 from .LM_filters import makeLMfilters
 
+RATIO_C = 0.2
+A_C = 50.
+NEIGH_AREAS_C = 0.1
 
 class Utils():
     '''
@@ -56,7 +59,7 @@ class Utils():
             tex_max = np.max(tex[:, :, i])
             tex_min = np.min(tex[:, :, i])
             tex[:, :, i] = (tex[:, :, i] - tex_min)/(tex_max - tex_min) * 255
-        tex = tex.astype(np.int8)
+        tex = tex.astype(np.int32)
         return tex
 
     def get_lbp(self):
@@ -93,7 +96,7 @@ class Utils():
             a = float(sortbyy[-1] - sortbyy[0])
             b = float(sortbyx[-1] - sortbyx[0] + EPS)
             ratio = a/b
-            coord[i][6] = ratio
+            coord[i][6] = ratio * RATIO_C
         return coord
 
     def get_avg_var(self, a):
@@ -105,7 +108,8 @@ class Utils():
             for j in range(a.shape[2]):
                 avg[i, j] = np.sum(a[:, :, j][self.rlist[i]]) / num_pix
                 var[i, j] = np.sum(
-                    (a[:, :, j][self.rlist[i]] - avg[i, j])**2)/num_pix
+                    (a[:, :, j][self.rlist[i]] - avg[i, j])**2) / num_pix
+        var /= 255.**2
         return avg, var
 
     def get_edges(self):
@@ -206,15 +210,18 @@ class Utils():
         num_reg = len(self.rlist)
         diff = np.zeros([num_reg, num_reg])
         sigmadist = 0.4
-        for i in range(num_reg - 1):
-            for j in range(num_reg - 1):
-                diff[i, j] = np.sum(
-                    (self.coord[i][0:2] - self.coord[j][0:2])**2)
+        # for i in range(num_reg - 1):
+        #     for j in range(num_reg - 1):
+        #         diff[i, j] = np.sum(
+        #             (self.coord[i][0:2] - self.coord[j][0:2])**2)
+        for i in range(num_reg):
+            diff[i] = np.sum((self.coord[i,0:2] - self.coord[:,0:2])**2, axis=1)
         diff = np.exp(-1*diff/sigmadist)
         for j in range(diff.shape[1]):
             diff[:, j] *= len(self.rlist[j][0])
         neigh_areas = np.sum(diff, axis=0)
-        neigh_areas /= self.width*self.height
+        neigh_areas /= self.width * self.height
+        neigh_areas *= NEIGH_AREAS_C
         return neigh_areas
 
     def get_w(self):
@@ -227,10 +234,12 @@ class Utils():
         pos[:, 0] /= self.height
         pos[:, 1] /= self.width
         diff = np.zeros([num_reg, num_reg])
+        # for i in range(num_reg):
+        #     for j in range(num_reg):
+        #         diff[i, j] = (pos[i][0] - pos[j][0])**2 + \
+        #             (pos[i][1] - pos[j][1])**2
         for i in range(num_reg):
-            for j in range(num_reg):
-                diff[i, j] = (pos[i][0] - pos[j][0])**2 + \
-                    (pos[i][1] - pos[j][1])**2
+            diff[i] = np.sum((pos[i,0:2] - pos[:,0:2])**2,axis=1)
         w = np.exp(-1. * diff / 2)
         return w
 
@@ -238,7 +247,8 @@ class Utils():
         a = np.zeros([len(self.rlist), 1])
         a[:, 0] = [float(len(r[0]))/float(self.width*self.height)
                    for r in self.rlist]
-        return np.array(a)
+        a = np.array(a)*A_C
+        return a
 
     @staticmethod
     def get_background(height, width):
@@ -267,9 +277,11 @@ class Utils():
     def get_diff(self, array):
         num_reg = array.shape[0]
         mat = np.zeros([num_reg, num_reg])
+        # for i in range(num_reg):
+        #     for j in range(num_reg):
+        #         mat[i][j] = np.abs(array[i] - array[j])
         for i in range(num_reg):
-            for j in range(num_reg):
-                mat[i][j] = np.abs(array[i] - array[j])
+            mat[i] = np.abs(array[i] - array[:])
         return mat
 
     def get_diff_hist(self, color):
@@ -279,10 +291,9 @@ class Utils():
             hist[i][color[self.rlist[i]]] += 1
         mat = np.zeros([num_reg, num_reg])
         for i in range(num_reg):
-            for j in range(num_reg):
-                a = 2 * (hist[i] - hist[j])**2
-                b = hist[i] + hist[j] + 1.
-                mat[i][j] = np.sum(a/b)
+            a = 2 * (hist[i] - hist[:])**2
+            b = hist[i] + hist[:] + 1
+            mat[i] = np.sum(a/b,axis = 1)
         return mat
 
     def dot(self, x, hist=False):
