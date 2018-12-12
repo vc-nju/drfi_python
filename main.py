@@ -11,9 +11,10 @@ def save_csv(img_type, img_id):
     Region2Csv(features, rlist,img_type,img_id)
 
 if __name__ == "__main__":
-    for i in range(450):
-        print("train", i)
-        save_csv("train", i)
-    for i in range(50):
-        print("val", i)
-        save_csv("val", i)
+    # for i in range(450):
+    #     print("train", i)
+    #     save_csv("train", i)
+    # for i in range(50):
+    #     print("val", i)
+    #     save_csv("val", i)
+    save_csv("train", 1)

@@ -203,18 +203,23 @@ class Utils():
         return edge_prop
 
     def get_neigh_areas(self):
+        import time
+        t = time.time()
         num_reg = len(self.rlist)
         diff = np.zeros([num_reg, num_reg])
         sigmadist = 0.4
-        for i in range(num_reg - 1):
-            for j in range(num_reg - 1):
-                diff[i, j] = np.sum(
-                    (self.coord[i][0:2] - self.coord[j][0:2])**2)
+        # for i in range(num_reg - 1):
+        #     for j in range(num_reg - 1):
+        #         diff[i, j] = np.sum(
+        #             (self.coord[i][0:2] - self.coord[j][0:2])**2)
+        for i in range(num_reg):
+            diff[i] = np.sum((self.coord[i,0:2] - self.coord[:,0:2])**2, axis=1)
         diff = np.exp(-1*diff/sigmadist)
         for j in range(diff.shape[1]):
             diff[:, j] *= len(self.rlist[j][0])
         neigh_areas = np.sum(diff, axis=0)
         neigh_areas /= self.width*self.height
+        print(time.time() - t)
         return neigh_areas
 
     def get_w(self):
