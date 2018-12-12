@@ -203,8 +203,6 @@ class Utils():
         return edge_prop
 
     def get_neigh_areas(self):
-        import time
-        t = time.time()
         num_reg = len(self.rlist)
         diff = np.zeros([num_reg, num_reg])
         sigmadist = 0.4
@@ -219,7 +217,6 @@ class Utils():
             diff[:, j] *= len(self.rlist[j][0])
         neigh_areas = np.sum(diff, axis=0)
         neigh_areas /= self.width*self.height
-        print(time.time() - t)
         return neigh_areas
 
     def get_w(self):
@@ -232,10 +229,12 @@ class Utils():
         pos[:, 0] /= self.height
         pos[:, 1] /= self.width
         diff = np.zeros([num_reg, num_reg])
+        # for i in range(num_reg):
+        #     for j in range(num_reg):
+        #         diff[i, j] = (pos[i][0] - pos[j][0])**2 + \
+        #             (pos[i][1] - pos[j][1])**2
         for i in range(num_reg):
-            for j in range(num_reg):
-                diff[i, j] = (pos[i][0] - pos[j][0])**2 + \
-                    (pos[i][1] - pos[j][1])**2
+            diff[i] = np.sum((pos[i,0:2] - pos[:,0:2])**2,axis=1)
         w = np.exp(-1. * diff / 2)
         return w
 
@@ -272,9 +271,11 @@ class Utils():
     def get_diff(self, array):
         num_reg = array.shape[0]
         mat = np.zeros([num_reg, num_reg])
+        # for i in range(num_reg):
+        #     for j in range(num_reg):
+        #         mat[i][j] = np.abs(array[i] - array[j])
         for i in range(num_reg):
-            for j in range(num_reg):
-                mat[i][j] = np.abs(array[i] - array[j])
+            mat[i] = np.abs(array[i] - array[:])
         return mat
 
     def get_diff_hist(self, color):
@@ -284,10 +285,9 @@ class Utils():
             hist[i][color[self.rlist[i]]] += 1
         mat = np.zeros([num_reg, num_reg])
         for i in range(num_reg):
-            for j in range(num_reg):
-                a = 2 * (hist[i] - hist[j])**2
-                b = hist[i] + hist[j] + 1.
-                mat[i][j] = np.sum(a/b)
+            a = 2 * (hist[i] - hist[:])**2
+            b = hist[i] + hist[:] + 1
+            mat[i] = np.sum(a/b,axis = 1)
         return mat
 
     def dot(self, x, hist=False):
