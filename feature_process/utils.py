@@ -16,6 +16,7 @@ from .LM_filters import makeLMfilters
 RATIO_C = 0.2
 A_C = 50.
 NEIGH_AREAS_C = 0.1
+EDGE_NEIGH = 1000
 
 class Utils():
     '''
@@ -192,17 +193,17 @@ class Utils():
                 # the points in the edge between Ri and Rj
                 edge_ij = self.edge_point[i][k]
                 num_points = len(edge_ij[0])
-                edge_prop[i, j, 0] = float(sum(edge_ij[0]) / num_points)
-                edge_prop[i, j, 1] = float(sum(edge_ij[1]) / num_points)
+                edge_prop[i, j, 0] = float(sum(edge_ij[0]) / (num_points * self.height))
+                edge_prop[i, j, 1] = float(sum(edge_ij[1]) / (num_points * self.width))
                 sortby_y = sorted(edge_ij[0])
                 sortby_x = sorted(edge_ij[1])
                 tenth = int(num_points * 0.1)
                 ninetith = int(num_points * 0.9)
-                edge_prop[i, j, 2] = sortby_y[tenth]
-                edge_prop[i, j, 3] = sortby_x[tenth]
-                edge_prop[i, j, 4] = sortby_y[ninetith]
-                edge_prop[i, j, 5] = sortby_x[ninetith]
-                edge_prop[i, j, 6] = float(
+                edge_prop[i, j, 2] = float(sortby_y[tenth]/self.height)
+                edge_prop[i, j, 3] = float(sortby_x[tenth]/self.width)
+                edge_prop[i, j, 4] = float(sortby_y[ninetith]/self.height)
+                edge_prop[i, j, 5] = float(sortby_x[ninetith]/self.width)
+                edge_prop[i, j, 6] = EDGE_NEIGH * float(
                     num_points / (self.width * self.height))
         return edge_prop
 

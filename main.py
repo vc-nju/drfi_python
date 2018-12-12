@@ -12,7 +12,7 @@ def save_csv(img_type, img_id):
 
 
 if __name__ == "__main__":
-    for i in range(82,450):
+    for i in range(142,143):
         print("train", i)
         save_csv("train", i)
     for i in range(50):
