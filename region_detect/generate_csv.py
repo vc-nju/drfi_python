@@ -103,3 +103,21 @@ class Region2Csv():
         df = pd.DataFrame(data)
         path = "data/csv/{}/{}.csv".format(self.img_type, self.img_id)
         df.to_csv(path, header=None, index=0)
+
+def combine_csv():
+    data = []
+    for i in range(450):
+        path = "data/csv/train/{}.csv".format(i)
+        if os.path.exists(path):
+            data.append(pd.read_csv(path, header=0).values)
+    data = np.concatenate(data, axis=0)
+    df = pd.DataFrame(data)
+    df.to_csv("data/csv/train/all.csv")
+    data = []
+    for i in range(50):
+        path = "data/csv/val/{}.csv".format(i)
+        if os.path.exists(path):
+            data.append(pd.read_csv(path, header=0).values)
+    data = np.concatenate(data, axis=0)
+    df = pd.DataFrame(data)
+    df.to_csv("data/csv/val/all.csv")
