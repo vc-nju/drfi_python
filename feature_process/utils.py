@@ -42,9 +42,7 @@ class Utils():
         self.color_avg, self.color_var = self.get_avg_var(imgchan)
         self.tex_avg, self.tex_var = self.get_avg_var(self.tex)
         self.lbp_avg, self.lbp_var = self.get_avg_var(self.lbp)
-        self.edge_nums, self.edge_neigh, self.edge_point = self.get_edges()
-        self.edge_prop = self.get_edge_prop()
-        self.neigh_areas = self.get_neigh_areas()
+        self.edge_neigh = self.get_edges()
         self.w = self.get_w()
         self.a = self.get_a()
 
@@ -117,11 +115,7 @@ class Utils():
         '''
         @description: 
         @param {None} 
-        @return: edge_nums: the total edge of Ri, 
-                 edge_neigh: the neighbor region of Ri, [(R1,R2,R3...), (R1,R2,R3...),]
-                 edge_point: the point in edge between Ri and Rj, [[[(y1,y2,...yi,),(x1,x2,...xi,)],[(y1,y2,y3,...),(x1,x2,x3,...)]]]
-                 the storage sequence is corrdinated to edge_neigh: for Ri, the nei_point[i][j] means the edge point between Ri and Rj
-                 may be a bit confusing, good luck!
+        @return: edge_neigh: the neighbor region of Ri, [(R1,R2,R3...), (R1,R2,R3...),]
         '''
         rmat = self.rmat
         rlist = self.rlist
@@ -146,84 +140,18 @@ class Utils():
             for x in range(shape[1]):
                 y_x[y, x, 0, :] = generate_y_list(y)
                 y_x[y, x, 1, :] = generate_x_list(x)
-        edge_nums = []
         edge_neigh = []
-        edge_point = []
 
-        def append_not_exist(x, _list): return _list.append(
-            x) if x not in _list else _list
         for region in rlist:
-            num = 0.
-            neighs = []
-            points = []
+            neigh_id = []
             for y, x in zip(region[0], region[1]):
-                for edge_direct in range(edge_mat.shape[2]):
-                    if edge_mat[y, x, edge_direct] != 0:
-                        y_ = y_x[y, x, 0, edge_direct]
-                        x_ = y_x[y, x, 1, edge_direct]
-                        num += 1.
-                        neigh_id = rmat[y_, x_]
-                        if neigh_id not in neighs:
-                            neighs.append(neigh_id)
-                        p = {"neigh_id": neigh_id, "point": (y_, x_,)}
-                        points.append(p)
-            edge_nums.append(num)
-            assert(len(neighs) != 0)
-            edge_neigh.append(neighs)
-            _points = [[(), ()] for i in range(len(neighs))]
-            for p in points:
-                index = neighs.index(p["neigh_id"])
-                _points[index][0] += (p["point"][0],)
-                _points[index][1] += (p["point"][1],)
-            edge_point.append(_points)
-        max_edge_num = max(edge_nums)
-        edge_nums = [edge/max_edge_num for edge in edge_nums]
-        return edge_nums, edge_neigh, edge_point
+                mask = (edge_mat[y, x] != 0)
+                y_ = y_x[y, x, 0][mask]
+                x_ = y_x[y, x, 1][mask]
+                neigh_id += list(set(neigh_id))
+            edge_neigh.append(list(set(neigh_id)))
 
-    def get_edge_prop(self):
-        """
-        return:             
-            edge_prob: the property of the edge in two neighbor regions
-        """
-        num_reg = len(self.rlist)
-        edge_prop = np.zeros((num_reg, num_reg, 7))
-        for i in range(num_reg):  # region i
-            for k in range(len(self.edge_neigh[i])):
-                j = self.edge_neigh[i][k]  # region j
-                # the points in the edge between Ri and Rj
-                edge_ij = self.edge_point[i][k]
-                num_points = len(edge_ij[0])
-                edge_prop[i, j, 0] = float(sum(edge_ij[0]) / (num_points * self.height))
-                edge_prop[i, j, 1] = float(sum(edge_ij[1]) / (num_points * self.width))
-                sortby_y = sorted(edge_ij[0])
-                sortby_x = sorted(edge_ij[1])
-                tenth = int(num_points * 0.1)
-                ninetith = int(num_points * 0.9)
-                edge_prop[i, j, 2] = float(sortby_y[tenth]/self.height)
-                edge_prop[i, j, 3] = float(sortby_x[tenth]/self.width)
-                edge_prop[i, j, 4] = float(sortby_y[ninetith]/self.height)
-                edge_prop[i, j, 5] = float(sortby_x[ninetith]/self.width)
-                edge_prop[i, j, 6] = EDGE_NEIGH * float(
-                    num_points / (self.width * self.height))
-        return edge_prop
-
-    def get_neigh_areas(self):
-        num_reg = len(self.rlist)
-        diff = np.zeros([num_reg, num_reg])
-        sigmadist = 0.4
-        # for i in range(num_reg - 1):
-        #     for j in range(num_reg - 1):
-        #         diff[i, j] = np.sum(
-        #             (self.coord[i][0:2] - self.coord[j][0:2])**2)
-        for i in range(num_reg):
-            diff[i] = np.sum((self.coord[i,0:2] - self.coord[:,0:2])**2, axis=1)
-        diff = np.exp(-1*diff/sigmadist)
-        for j in range(diff.shape[1]):
-            diff[:, j] *= len(self.rlist[j][0])
-        neigh_areas = np.sum(diff, axis=0)
-        neigh_areas /= self.width * self.height
-        neigh_areas *= NEIGH_AREAS_C
-        return neigh_areas
+        return edge_neigh
 
     def get_w(self):
         num_reg = len(self.rlist)
@@ -235,10 +163,6 @@ class Utils():
         pos[:, 0] /= self.height
         pos[:, 1] /= self.width
         diff = np.zeros([num_reg, num_reg])
-        # for i in range(num_reg):
-        #     for j in range(num_reg):
-        #         diff[i, j] = (pos[i][0] - pos[j][0])**2 + \
-        #             (pos[i][1] - pos[j][1])**2
         for i in range(num_reg):
             diff[i] = np.sum((pos[i,0:2] - pos[:,0:2])**2,axis=1)
         w = np.exp(-1. * diff / 2)
@@ -278,9 +202,6 @@ class Utils():
     def get_diff(self, array):
         num_reg = array.shape[0]
         mat = np.zeros([num_reg, num_reg])
-        # for i in range(num_reg):
-        #     for j in range(num_reg):
-        #         mat[i][j] = np.abs(array[i] - array[j])
         for i in range(num_reg):
             mat[i] = np.abs(array[i] - array[:])
         return mat

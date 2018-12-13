@@ -66,22 +66,14 @@ class Super_Region():
             if a != b and e.weight <= thresholds[a] and e.weight <= thresholds[b]:
                 u.join(a, b)
                 a = u.find(a)
-                thresholds[a] = e.weight + c / u.elts[a].size
-        rlist = []
-        index = 0
-        # use index_array to map the p to index
-        index_array = np.ones(im_size, dtype=np.int32)*-1
+                thresholds[a] = e.weight + c / u.table[a,1]
+        rmat= u.find_all().reshape([height, width])
+        rlist = [[(),()] for i in range(u.num)]
         for y in range(height):
             for x in range(width):
-                p = u.find(y * width + x)
-                if index_array[p] == -1:
-                    index_array[p] = index
-                    rlist.append([(), ()])
-                    index += 1
-                rlist[index_array[p]][0] += (y,)
-                rlist[index_array[p]][1] += (x,)
-        region = np.zeros(im.shape[0:2], dtype=np.int32)
+                index = rmat[y, x]
+                rlist[index][0] += (y,)
+                rlist[index][1] += (x,)
         for i in range(len(rlist)):
             rlist[i] = tuple(rlist[i])
-            region[rlist[i]] = i
-        return rlist, region
+        return rlist, rmat

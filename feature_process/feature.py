@@ -37,7 +37,6 @@ class Features():
         self.reg_features = self.get_region_features()
         self.con_features = self.get_contrast_features()
         self.bkp_features = self.get_background_features()
-        self.comb_features = self.get_combine_features()
 
     def get_region_features(self):
         '''
@@ -46,15 +45,13 @@ class Features():
         @return: Region features
         '''
         num_reg = len(self.rlist)
-        reg_features = np.zeros([num_reg, 35])
+        reg_features = np.zeros([num_reg, 33])
         reg_features[:, 0:6] = self.utils.coord[:-1, 0:6]
-        reg_features[:, 6] = self.utils.edge_nums[:-1]
-        reg_features[:, 7] = self.utils.coord[:-1, 6]
-        reg_features[:, 8:17] = self.utils.color_var[:-1]
-        reg_features[:, 17:32] = self.utils.tex_var[:-1]
-        reg_features[:, 32] = self.utils.lbp_var[:-1, 0]
-        reg_features[:, 33] = self.utils.a[:-1, 0]
-        reg_features[:, 34] = self.utils.neigh_areas[:-1]
+        reg_features[:, 6] = self.utils.coord[:-1, 6]
+        reg_features[:, 7:16] = self.utils.color_var[:-1]
+        reg_features[:, 16:31] = self.utils.tex_var[:-1]
+        reg_features[:, 31] = self.utils.lbp_var[:-1, 0]
+        reg_features[:, 32] = self.utils.a[:-1, 0]
         return reg_features
 
     def get_contrast_features(self):
@@ -77,23 +74,6 @@ class Features():
         bkg_features = bkg_features.T
         return bkg_features
 
-    def get_combine_features(self):
-        '''
-        @description: Generate background features.
-        @param {type} 
-        @return: Combine features lists
-                 example: [ np.shape(a, 29), np.shape(b, 29)... ], a means region 0's neighboor regions num.
-        '''
-        edge_ids = self.utils.edge_neigh
-        comb_features = []
-        for i in range(len(edge_ids)):
-            ids = edge_ids[i]
-            features = np.zeros([29+7, len(ids)])
-            features[:29, :] = self.features29[:, i, ids]
-            features[29:, :] = self.utils.edge_prop[i, ids, :].T
-            comb_features.append(features.T)
-        return comb_features
-
     def get_29_features(self):
         '''
         @description: 29-dim features of all super regions and background region.
@@ -111,6 +91,5 @@ class Features():
         for i in range(15):
             features[i+12] = dot(self.utils.tex_avg[:, i])
         features[27] = dot(self.utils.tex, hist=True)
-        #print(np.int16(self.utils.lbp))
         features[28] = dot(np.int16(self.utils.lbp), hist=True)
         return features
