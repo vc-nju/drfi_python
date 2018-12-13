@@ -8,15 +8,7 @@ import time
 
 if __name__ == "__main__":
     path = "data/train_origin/0.png"
-    t = time.time()
     rlist, rmat = Super_Region.get_region(path, 300.)
-    print(np.min(rmat))
-    print(time.time() - t)
-    t = time.time()
     f = Features(path, rlist, rmat)
-    print(time.time() - t)
-    t = time.time()
     csv_path = "data/csv/0.csv"
     Region2Csv(f, rlist, 0, csv_path)
-    print(time.time() - t)
-    t = time.time()
