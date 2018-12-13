@@ -6,4 +6,4 @@ from region_detect import Super_Region, Region2Csv, combine_csv
 from model import RandomForest, MLP
 
 if __name__ == "__main__":
-    rf = MLP()
+    rf = RandomForest()

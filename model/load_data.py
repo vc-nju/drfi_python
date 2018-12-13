@@ -21,8 +21,13 @@ def _load_data():
     step = len(X_p)//neg_num - 1
     _X_p = [X_p[i] for i in range(0, neg_num*step, step)]
     itr = range(neg_num)
-    X_train = [_X_p[i] for i in itr] + [X_n[i] for i in itr]
-    Y_train = [1. for i in itr] + [0. for i in itr]
+    X_train = []
+    Y_train = []
+    for i in range(len(X_n)):
+        X_train.append(_X_p[i])
+        X_train.append(X_n[i])
+        Y_train.append(1.)
+        Y_train.append(0.)
     X_train = np.concatenate(X_train, axis=0)
     Y_train = np.array(Y_train)
     df = pd.read_csv("data/csv/val/all.csv")
