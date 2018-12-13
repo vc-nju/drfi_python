@@ -47,18 +47,18 @@ class Region2Csv():
 
 def combine_csv():
     data = []
-    for i in range(450):
+    for i in range(1,50):
         path = "data/csv/train/{}.csv".format(i)
         if os.path.exists(path):
-            data.append(pd.read_csv(path, header=0).values)
+            data.append(pd.read_csv(path).values[1:])
     data = np.concatenate(data, axis=0)
     df = pd.DataFrame(data)
     df.to_csv("data/csv/train/all.csv")
     data = []
-    for i in range(50):
+    for i in range(41,51):
         path = "data/csv/val/{}.csv".format(i)
         if os.path.exists(path):
-            data.append(pd.read_csv(path, header=0).values)
+            data.append(pd.read_csv(path).values[1:])
     data = np.concatenate(data, axis=0)
     df = pd.DataFrame(data)
     df.to_csv("data/csv/val/all.csv")

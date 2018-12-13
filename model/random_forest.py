@@ -14,7 +14,7 @@ class RandomForest():
     @staticmethod
     def generate_model(X_train, Y_train):
         clf = RandomForestClassifier(
-            n_estimators=100, max_depth=6, random_state=0)
+            n_estimators=100, max_depth=2, random_state=0)
         clf.fit(X_train, Y_train)
         return clf
 
