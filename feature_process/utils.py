@@ -130,9 +130,7 @@ class Utils():
         edge_mat[1:, :-1, 6] += (rmat[:-1, 1:] - rmat[1:, :-1])
         edge_mat[1:, 1:, 7] += (rmat[:-1, :-1] - rmat[1:, 1:])
         edge_mat[edge_mat != 0] = 1
-
         def generate_y_list(y): return [y+1, y-1, y, y, y+1, y+1, y-1, y-1]
-
         def generate_x_list(x): return [x, x, x+1, x-1, x+1, x-1, x+1, x-1]
         shape = (rmat.shape[0], rmat.shape[1], 2, 8)
         y_x = np.zeros(shape, dtype=np.int32)
@@ -148,7 +146,7 @@ class Utils():
                 mask = (edge_mat[y, x] != 0)
                 y_ = y_x[y, x, 0][mask]
                 x_ = y_x[y, x, 1][mask]
-                neigh_id += list(set(neigh_id))
+                neigh_id += list(set(self.rmat[y_,x_]))
             edge_neigh.append(list(set(neigh_id)))
 
         return edge_neigh

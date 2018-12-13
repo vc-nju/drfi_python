@@ -24,7 +24,7 @@ class Region2Csv():
             data.append(line_data)
         data = np.concatenate(data)
         df = pd.DataFrame(data)
-        df.to_csv(csv_path, header=None, index=0)
+        df.to_csv(csv_path)
 
     def generate_line_data(self, img_id, region_i_id, region_j_id, is_same_region):
         """
@@ -32,7 +32,6 @@ class Region2Csv():
             | img_id | region_id i | region_id j | is same_region | 222-dim features |
         """
         line_data = np.zeros([1, 4 + 211])
-        line_data = np.zeros_like(line_data)
         line_data[0, 0] = img_id
         line_data[0, 1] = region_i_id
         line_data[0, 2] = region_j_id

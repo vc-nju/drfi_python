@@ -10,6 +10,7 @@ if __name__ == "__main__":
     path = "data/train_origin/0.png"
     t = time.time()
     rlist, rmat = Super_Region.get_region(path, 300.)
+    print(np.min(rmat))
     print(time.time() - t)
     t = time.time()
     f = Features(path, rlist, rmat)
