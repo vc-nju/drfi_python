@@ -4,13 +4,14 @@
 @Github: https://github.com/lizhihao6
 @Date: 2018-11-26 00:09:40
 @LastEditors: lizhihao6
-@LastEditTime: 2018-12-11 01:18:39
+@LastEditTime: 2018-12-21 03:16:19
 '''
 import cv2
 import copy
 import numpy as np
 
 from .utils import Utils
+
 
 class Features():
     '''
@@ -21,7 +22,7 @@ class Features():
     @return: Features Class
     '''
 
-    def __init__(self, path, rlist, rmat):
+    def __init__(self, path, rlist, rmat, need_comb_features=True):
         '''
         @description: The init of feature class 
         @param {img path, region lists, region matrix} 
@@ -31,13 +32,19 @@ class Features():
         self.rlist = rlist
         _list = copy.deepcopy(rlist)
         _list.append(Utils.get_background(self.rgb.shape[0], self.rgb.shape[1]))
-        self.rmat = rmat
-        self.utils = Utils(self.rgb, _list, self.rmat)
+        self.utils = Utils(self.rgb, _list, rmat, need_comb_features)
         self.features29 = self.get_29_features()
-        self.reg_features = self.get_region_features()
-        self.con_features = self.get_contrast_features()
-        self.bkp_features = self.get_background_features()
-        self.comb_features = self.get_combine_features()
+        self.features93 = self.get_features93()
+        if need_comb_features:
+            self.comb_features = self.get_combine_features()
+
+    def get_features93(self):
+        num_reg = len(self.rlist)
+        features93 = np.zeros([num_reg, 93])
+        features93[:, :35] = self.get_region_features()
+        features93[:, 35:35+29] = self.get_contrast_features()
+        features93[:, 64:] = self.get_background_features()
+        return features93
 
     def get_region_features(self):
         '''
@@ -63,7 +70,8 @@ class Features():
         @param {None} 
         @return: Contrast features
         '''
-        con_features = np.sum(self.features29, axis=1)[:, :-1] / len(self.rlist)
+        con_features = np.sum(self.features29, axis=1)[
+            :, :-1] / len(self.rlist)
         con_features = con_features.T
         return con_features
 
@@ -85,13 +93,17 @@ class Features():
                  example: [ np.shape(a, 29), np.shape(b, 29)... ], a means region 0's neighboor regions num.
         '''
         edge_ids = self.utils.edge_neigh
-        comb_features = []
-        for i in range(len(edge_ids)):
+        num_reg = len(self.rlist)
+        comb_features = [{"i_id":i, "j_ids":[], "features":[]} for i in range(num_reg)]
+        for i in range(num_reg):
             ids = edge_ids[i]
-            features = np.zeros([29+7, len(ids)])
-            features[:29, :] = self.features29[:, i, ids]
-            features[29:, :] = self.utils.edge_prop[i, ids, :].T
-            comb_features.append(features.T)
+            features = np.zeros([222, len(ids)])
+            features[:93] = np.repeat(self.features93[i], len(ids)).reshape(93, -1)
+            features[93:186] = self.features93[ids]
+            features[186:186+29] = self.features29[:, i, ids]
+            features[215:] = self.utils.edge_prop[i, ids, :].T
+            comb_features[i]["j_ids"] = ids
+            comb_features[i]["features"] = features.T
         return comb_features
 
     def get_29_features(self):
@@ -111,6 +123,5 @@ class Features():
         for i in range(15):
             features[i+12] = dot(self.utils.tex_avg[:, i])
         features[27] = dot(self.utils.tex, hist=True)
-        #print(np.int16(self.utils.lbp))
         features[28] = dot(np.int16(self.utils.lbp), hist=True)
         return features

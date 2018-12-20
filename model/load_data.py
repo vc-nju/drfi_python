@@ -2,45 +2,50 @@ import os
 import pickle
 import numpy as np
 import pandas as pd
+from sklearn.utils import resample
 
-def _load_data():
-    df = pd.read_csv("data/csv/train/all.csv")
-    index = [str(i) for i in range(4, 226)]
-    X = df[index].values
-    Y = df[["3"]].values
-    X_p = []
-    X_n = []
-    for i in range(len(X)):
-        _x = X[i, :]
-        _x = _x[np.newaxis, :]
-        if int(Y[i, 0]) == 1:
-            X_p.append(_x)
-        else:
-            X_n.append(_x)
-    neg_num = len(X_n)
-    step = len(X_p)//neg_num - 1
-    _X_p = [X_p[i] for i in range(0, neg_num*step, step)]
-    itr = range(neg_num)
-    X_train = [_X_p[i] for i in itr] + [X_n[i] for i in itr]
-    Y_train = [1. for i in itr] + [0. for i in itr]
-    X_train = np.concatenate(X_train, axis=0)
-    Y_train = np.array(Y_train)
-    df = pd.read_csv("data/csv/val/all.csv")
-    index = [str(i) for i in range(4, 226)]
-    X_test = df[index].values
-    Y_test = df[["3"]].values[:, 0]
-    return X_train, Y_train, X_test, Y_test
+LABEL_INDEX = 0
+FEATURE_INDEX_MIN = 1
 
 
-def load_data():
-    path = "data/csv/data.pkl"
+def rebalance(X, Y):
+    pos_num = np.sum(Y)
+    neg_num = len(Y) - pos_num
+    X_more = X[Y == 1]
+    X_less = X[Y == 0]
+    Y_more = np.ones(pos_num)
+    Y_less = np.zeros(neg_num)
+    if pos_num < neg_num:
+        X_more, X_less = X_less, X_more
+        Y_more, Y_less = Y_less, Y_more
+    X_more = resample(X_more, n_samples=len(X_less), random_state=0)
+    Y_more = resample(Y_more, n_samples=len(Y_less), random_state=0)
+    X = np.concatenate([X_more, X_less], axis=0)
+    X = np.concatenate([Y_more, X_more], axis=0)
+    return X, Y
+
+
+def _load_data(csv_path, rebalance=True):
+    df = pd.read_csv(csv_path)
+    index = [str(i) for i in range(FEATURE_INDEX_MIN, FEATURE_INDEX_MIN+222)]
+    _index = [str(i) for i in range(FEATURE_INDEX_MIN, FEATURE_INDEX_MIN+93)]
+    try:
+        X = df[index].values
+    except:
+        X = df[_index].values
+    Y = df[[str(LABEL_INDEX)]].values[:, 0]
+    if rebalance:
+        X, Y = rebalance(X, Y)
+    return X, Y
+
+
+def load_data(csv_path, rebalance=True):
+    path = csv_path + ".pkl"
     if os.path.exists(path):
         with open(path, "rb+") as file:
-            [X_train, Y_train, X_test, Y_test] = pickle.load(file)
+            [X, Y] = pickle.load(file)
     else:
-        X_train, Y_train, X_test, Y_test = _load_data()
+        X, Y = _load_data(csv_path, rebalance)
         with open(path, "wb+") as file:
-            pickle.dump([X_train, Y_train, X_test, Y_test], file)
-
-    return X_train, Y_train, X_test, Y_test
-
+            pickle.dump([X, Y], file)
+    return X, Y
