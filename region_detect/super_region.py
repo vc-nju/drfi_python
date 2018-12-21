@@ -113,7 +113,7 @@ class Super_Region():
                 u.join(a, b)
 
         # use index_array to map the p to index
-        index_array = np.ones(num_reg)*-1
+        index_array = np.ones(num_reg, dtype=np.int32)*-1
         trans_array = np.zeros(num_reg)
         index = 0
         _rlist = []

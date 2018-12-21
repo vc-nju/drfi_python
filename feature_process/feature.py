@@ -99,7 +99,7 @@ class Features():
             ids = edge_ids[i]
             features = np.zeros([222, len(ids)])
             features[:93] = np.repeat(self.features93[i], len(ids)).reshape(93, -1)
-            features[93:186] = self.features93[ids]
+            features[93:186] = self.features93[ids].T
             features[186:186+29] = self.features29[:, i, ids]
             features[215:] = self.utils.edge_prop[i, ids, :].T
             comb_features[i]["j_ids"] = ids
