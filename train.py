@@ -26,7 +26,7 @@ class Img_Data:
             similarity[i, ids] = rf.predict(X)[:, 1]
         for c in C_LIST:
             rlist, rmat = Super_Region.combine_region(
-                similarity, c, im_data.rlist, im_data.rmat)
+                similarity, c, self.rlist, self.rmat)
             self.rlists.append(rlist)
             self.rmats.append(rmat)
             features = Features(self.img_path, rlist, rmat,

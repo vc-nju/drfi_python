@@ -58,7 +58,7 @@ class Super_Region():
         height = im.shape[0]
         width = im.shape[1]
         im_size = height * width
-        u = Universe(im_size)
+        u = Universe(np.ones(im_size), im_size)
         thresholds = np.ones(im_size) * c
         for e in edges:
             a = e.a[0] * width + e.a[1]
@@ -91,7 +91,8 @@ class Super_Region():
     @staticmethod
     def combine_region(similarity, c, rlist, rmat):
         num_reg = len(rlist)
-        u = Universe(num_reg)
+        elt_sizes = [len(r[0]) for r in rlist]
+        u = Universe(elt_sizes, num_reg)
         thresholds = np.ones(num_reg) * c
         edges = []
         for i in range(num_reg - 1):
@@ -105,6 +106,7 @@ class Super_Region():
                 u.join(a, b)
                 a = u.find(a)
                 thresholds[a] = e.weight + c / u.elts[a].size
+
         # force minimum size of segmentation
         for e in edges:
             a = u.find(e.a)

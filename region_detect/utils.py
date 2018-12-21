@@ -20,9 +20,9 @@ class Elt():
 
 
 class Universe():
-    def __init__(self, im_size):
+    def __init__(self, elt_sizes, im_size):
         self.num = im_size
-        self.elts = [Elt(0, i, 1) for i in range(im_size)]
+        self.elts = [Elt(0, i, elt_sizes[i]) for i in range(im_size)]
 
     def find(self, x):
         y = x
