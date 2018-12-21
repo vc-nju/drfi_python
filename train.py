@@ -20,9 +20,10 @@ class Img_Data:
     def get_multi_segs(self, rf):
         num_reg = len(self.rlist)
         similarity = np.ones([num_reg, num_reg]) * 1000
-        ids = self.comb_features[i]["j_ids"]
-        X = self.comb_features[i]["features"]
-        similarity[i, ids] = rf.predict(X)[:, 1]
+        for i in range(num_reg):
+            ids = self.comb_features[i]["j_ids"]
+            X = self.comb_features[i]["features"]
+            similarity[i, ids] = rf.predict(X)[:, 1]
         for c in C_LIST:
             rlist, rmat = Super_Region.combine_region(
                 similarity, c, im_data.rlist, im_data.rmat)
