@@ -94,7 +94,10 @@ class Super_Region():
         elt_sizes = [len(r[0]) for r in rlist]
         u = Universe(elt_sizes, num_reg)
         thresholds = np.ones(num_reg) * c
+        for i in range(num_reg):
+            thresholds[i] /= u.elts[i].size
         edges = []
+        print(similarity)
         for i in range(num_reg - 1):
             for j in range(i+1, num_reg):
                 edges.append(Edge(i, j, similarity[i, j]))
@@ -107,12 +110,12 @@ class Super_Region():
                 a = u.find(a)
                 thresholds[a] = e.weight + c / u.elts[a].size
 
-        # force minimum size of segmentation
-        for e in edges:
-            a = u.find(e.a)
-            b = u.find(e.b)
-            if a != b and (u.elts[a].size < MIN_REGION_SIZE or u.elts[b].size < MIN_REGION_SIZE):
-                u.join(a, b)
+        # # force minimum size of segmentation
+        # for e in edges:
+        #     a = u.find(e.a)
+        #     b = u.find(e.b)
+        #     if a != b and (u.elts[a].size < MIN_REGION_SIZE or u.elts[b].size < MIN_REGION_SIZE):
+        #         u.join(a, b)
 
         # use index_array to map the p to index
         index_array = np.ones(num_reg, dtype=np.int32)*-1

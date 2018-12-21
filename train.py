@@ -4,7 +4,8 @@ from feature_process import Features
 from region_detect import Super_Region, Region2Csv
 
 TRAIN_IMGS = 1
-C_LIST = [0.2, 0.3, 0.5, 1.0]
+#C_LIST = [0.2, 0.3, 0.5, 1.0]
+C_LIST = [20, 80, 350, 900]
 
 
 class Img_Data:
@@ -19,14 +20,15 @@ class Img_Data:
 
     def get_multi_segs(self, rf):
         num_reg = len(self.rlist)
-        similarity = np.ones([num_reg, num_reg]) * 1000
+        similarity = np.ones([num_reg, num_reg])
         for i in range(num_reg):
             ids = self.comb_features[i]["j_ids"]
             X = self.comb_features[i]["features"]
-            similarity[i, ids] = rf.predict(X)[:, 1]
+            similarity[i, ids] = rf.predict(X)[:, 0]
         for c in C_LIST:
             rlist, rmat = Super_Region.combine_region(
                 similarity, c, self.rlist, self.rmat)
+            print(len(rlist))
             self.rlists.append(rlist)
             self.rmats.append(rmat)
             features = Features(self.img_path, rlist, rmat,

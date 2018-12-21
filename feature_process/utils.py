@@ -179,7 +179,6 @@ class Utils():
                     _points[index][1] += (p["point"][1],)
                 edge_point.append(_points)
         max_edge_num = max(edge_nums)
-        print(max_edge_num)
         edge_nums = [edge/max_edge_num for edge in edge_nums]
         return edge_nums, edge_neigh, edge_point
 
