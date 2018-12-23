@@ -10,8 +10,6 @@ class RandomForest():
     def __init__(self):
         self.clf = RandomForestClassifier(
             n_estimators=200, max_depth=20, random_state=0, max_features="log2")
-        # self.clf = RandomForestClassifier(
-        #     n_estimators=10, max_depth=5, random_state=0, max_features="log2")
 
     def train(self, train_csv_path):
         X_train, Y_train = load_data(train_csv_path)
