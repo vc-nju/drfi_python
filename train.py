@@ -4,7 +4,6 @@ from feature_process import Features
 from region_detect import Super_Region, Region2Csv
 
 TRAIN_IMGS = 1
-#C_LIST = [0.2, 0.3, 0.5, 1.0]
 C_LIST = [20, 80, 350, 900]
 
 
