@@ -34,8 +34,7 @@ def _load_data(csv_path, rebalance=True):
         X = df[index].values
     except:
         X = df[_index].values
-    Y = df[[str(LABEL_INDEX+1)]].values[:, 0]
-    print(Y)
+    Y = df[[str(LABEL_INDEX+1)]].values[:, 0]#changed
     if rebalance:
         X, Y = do_rebalance(X, Y)
     return X, Y
