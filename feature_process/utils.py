@@ -4,7 +4,7 @@
 @Github: https://github.com/lizhihao6
 @Date: 2018-11-28 17:02:30
 @LastEditors: lizhihao6
-@LastEditTime: 2018-12-11 18:11:56
+@LastEditTime: 2018-12-21 02:08:08
 '''
 
 import cv2
@@ -25,7 +25,7 @@ class Utils():
     @return: Utils class
     '''
 
-    def __init__(self, rgb, rlist, rmat):
+    def __init__(self, rgb, rlist, rmat, need_comb_features=True):
         '''
         @description: The init of Utils class.
         @param {img rgb, region lists, region matrix} 
@@ -42,8 +42,9 @@ class Utils():
         self.color_avg, self.color_var = self.get_avg_var(imgchan)
         self.tex_avg, self.tex_var = self.get_avg_var(self.tex)
         self.lbp_avg, self.lbp_var = self.get_avg_var(self.lbp)
-        self.edge_nums, self.edge_neigh, self.edge_point = self.get_edges()
-        self.edge_prop = self.get_edge_prop()
+        self.edge_nums, self.edge_neigh, self.edge_point = self.get_edges(need_comb_features)
+        if need_comb_features:
+            self.edge_prop = self.get_edge_prop()
         self.neigh_areas = self.get_neigh_areas()
         self.w = self.get_w()
         self.a = self.get_a()
@@ -113,7 +114,7 @@ class Utils():
         var /= 255.**2
         return avg, var
 
-    def get_edges(self):
+    def get_edges(self, need_comb_features):
         '''
         @description: 
         @param {None} 
@@ -168,14 +169,15 @@ class Utils():
                         p = {"neigh_id": neigh_id, "point": (y_, x_,)}
                         points.append(p)
             edge_nums.append(num)
-            assert(len(neighs) != 0)
-            edge_neigh.append(neighs)
-            _points = [[(), ()] for i in range(len(neighs))]
-            for p in points:
-                index = neighs.index(p["neigh_id"])
-                _points[index][0] += (p["point"][0],)
-                _points[index][1] += (p["point"][1],)
-            edge_point.append(_points)
+            if need_comb_features:
+                assert(len(neighs) != 0)
+                edge_neigh.append(neighs)
+                _points = [[(), ()] for i in range(len(neighs))]
+                for p in points:
+                    index = neighs.index(p["neigh_id"])
+                    _points[index][0] += (p["point"][0],)
+                    _points[index][1] += (p["point"][1],)
+                edge_point.append(_points)
         max_edge_num = max(edge_nums)
         edge_nums = [edge/max_edge_num for edge in edge_nums]
         return edge_nums, edge_neigh, edge_point

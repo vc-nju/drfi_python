@@ -6,27 +6,8 @@ import pandas as pd
 
 class Region2Csv():
 
-    def __init__(self, features, rlist, img_type, img_id):
-        self.features = features
-        self.rlist = rlist
-        self.img_type = img_type
-        self.img_id = img_id
-        self.neigh = features.utils.edge_neigh
-        self.seg_ids = self.get_seg_ids()
-        self.in_segs = self.get_in_segs()
-        self.generate_csv()
-
-    def get_seg_ids(self):
-        """
-        Find which seg_id could be used in this img_id. ( Because of the Discontinuous of seg_id. )
-        """
-        seg_ids = []
-        for i in range(40):
-            if os.path.exists("data/{}_coco2pic/{}_{}.png".format(self.img_type, self.img_id, i)):
-                seg_ids.append(i)
-        return seg_ids
-
-    def get_in_segs(self):
+    @staticmethod
+    def get_in_segs(rlist, seg_path):
         """
         Find whether two super region in the same segs or not.
         return:
@@ -38,86 +19,73 @@ class Region2Csv():
                         else: 
                             it will be 0.
         """
-        in_segs = np.zeros([len(self.seg_ids), len(self.rlist)])
-        for i in range(len(self.seg_ids)):
-            seg_id = self.seg_ids[i]
-            path = "data/{}_coco2pic/{}_{}.png".format(
-                self.img_type, self.img_id, seg_id)
-            seg = cv2.imread(path)[:,:,0]
-            _seg = np.zeros_like(seg)
-            _seg[seg == 127] = 1
-            _seg[seg == 128] = 1
-            for j in range(len(self.rlist)):
-                r = self.rlist[j]
-                in_size = np.sum(_seg[r])
-                if in_size < 0.2 * len(r[0]):
-                    in_segs[i, j] = -1
-                elif in_size > 0.8 * len(r[0]):
-                    in_segs[i, j] = 1
+        in_segs = np.zeros(len(rlist))
+        seg = cv2.imread(seg_path)[:, :, 0]
+        _seg = np.zeros_like(seg)
+        _seg[seg == 0] = 1
+        for i in range(len(rlist)):
+            r = rlist[i]
+            in_size = np.sum(_seg[r])
+            if in_size < 0.2 * len(r[0]):
+                in_segs[i] = -1
+            elif in_size > 0.8 * len(r[0]):
+                in_segs[i] = 1
         return in_segs
 
-    def generate_csv(self):
+    @staticmethod
+    def generate_similar_csv(rlist, comb_features, seg_path, csv_path):
+        in_segs = Region2Csv.get_in_segs(rlist, seg_path)
         """
         Each line of CSV will be like this:
-            | img_id | seg_id | region_id i | region_id j | is same_region | 222-dim features |
+            | is same_region | 222-dim features |
         """
         data = []
-        line_data = np.zeros([1, 5 + 222])
-        for k in range(len(self.seg_ids)):
-            seg_k_id = self.seg_ids[k]
-            for i in range(len(self.rlist)):
-                region_i_id = i
-                for j in range(len(self.neigh[i])):
-                    region_j_id = self.neigh[i][j]
-                    # at the edge
-                    if self.in_segs[k, region_i_id] == 0 or self.in_segs[k, region_j_id] == 0:
-                        continue
-                    # both out the seg
-                    elif self.in_segs[k, region_i_id] == self.in_segs[k, region_j_id] == -1:
-                        continue
-                    is_same_region = (self.in_segs[k, region_i_id] + self.in_segs[k, region_j_id])/2
-                    line_data = np.zeros_like(line_data)
-                    line_data[0, 0] = self.img_id
-                    line_data[0, 1] = seg_k_id
-                    line_data[0, 2] = region_i_id
-                    line_data[0, 3] = region_j_id
-                    line_data[0, 4] = is_same_region
-                    line_data[0, 5: 5+35] = self.features.reg_features[region_i_id]
-                    line_data[0, 40: 40 +
-                              29] = self.features.con_features[region_i_id]
-                    line_data[0, 69: 69 +
-                              29] = self.features.bkp_features[region_i_id]
-                    line_data[0, 98: 98 +
-                              35] = self.features.reg_features[region_j_id]
-                    line_data[0, 133: 133 +
-                              29] = self.features.con_features[region_j_id]
-                    line_data[0, 162: 162 +
-                              29] = self.features.bkp_features[region_j_id]
-                    line_data[0, 191: 191+29 +
-                              7] = self.features.comb_features[region_i_id][j]
-                    data.append(line_data)
-        if(len(data) == 0):
-            print("Got noting in {} {}".format(self.img_type, self.img_id))
+        for i, comb_f in enumerate(comb_features):
+            region_i_id = i
+            for j,  region_j_id in enumerate(comb_f["j_ids"]):
+                # at the edge
+                if in_segs[region_i_id] == 0 or in_segs[region_j_id] == 0:
+                    continue
+                # both out the seg
+                elif in_segs[region_i_id] == in_segs[region_j_id] == -1:
+                    continue
+                is_same_region = (
+                    in_segs[region_i_id] + in_segs[region_j_id])/2
+                line_data = np.zeros([1, 1 + 222])
+                line_data[0, 0] = is_same_region
+                line_data[0, 1:] = comb_f["features"][j]
+                data.append(line_data)
+        data = np.concatenate(data)
+        df = pd.DataFrame(data)
+        df.to_csv(csv_path, index=0)
+
+    @staticmethod
+    def generate_seg_csv(rlist, features93, seg_path, csv_path):
+        in_segs = Region2Csv.get_in_segs(rlist, seg_path)
+        """
+        Each line of CSV will be like this:
+            | is same_region | 93-dim features |
+        """
+        data = []
+        for i, features in enumerate(features93):
+            # at the edge
+            line_data = np.zeros([1, 1 + 93])
+            if in_segs[i] == 0:
+                continue
+            is_seg = (in_segs[i] + 1)/2
+            line_data[0, 0] = is_seg
+            line_data[0, 1:] = features
+            data.append(line_data)
+        if len(data) == 0:
+            print("got noting in {}".format(csv_path))
             return
         data = np.concatenate(data)
         df = pd.DataFrame(data)
-        path = "data/csv/{}/{}.csv".format(self.img_type, self.img_id)
-        df.to_csv(path, header=None, index=0)
+        df.to_csv(csv_path, index=0)
 
-def combine_csv():
-    data = []
-    for i in range(450):
-        path = "data/csv/train/{}.csv".format(i)
-        if os.path.exists(path):
-            data.append(pd.read_csv(path, header=0).values)
-    data = np.concatenate(data, axis=0)
-    df = pd.DataFrame(data)
-    df.to_csv("data/csv/train/all.csv")
-    data = []
-    for i in range(50):
-        path = "data/csv/val/{}.csv".format(i)
-        if os.path.exists(path):
-            data.append(pd.read_csv(path, header=0).values)
-    data = np.concatenate(data, axis=0)
-    df = pd.DataFrame(data)
-    df.to_csv("data/csv/val/all.csv")
+    @staticmethod
+    def combine_csv(path_list, all_csv_path):
+        data = [pd.read_csv(path).values for path in path_list if os.path.exists(path)]
+        data = np.concatenate(data, axis=0)
+        df = pd.DataFrame(data)
+        df.to_csv(all_csv_path)
