@@ -5,7 +5,6 @@ from .utils import Edge, Universe
 
 MIN_REGION_SIZE = 300
 
-
 class Super_Region():
     @staticmethod
     def guass_filter(path):
