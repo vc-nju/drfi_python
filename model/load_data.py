@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.utils import resample
 
-LABEL_INDEX = 0
+LABLE_INDEX = 0
 FEATURE_INDEX_MIN = 1
 
 
@@ -33,7 +33,7 @@ def _load_data(csv_path, rebalance=True):
         X = df[index].values
     except:
         X = df[_index].values
-    Y = df[[str(LABEL_INDEX+1)]].values[:, 0]
+    Y = df[[str(LABLE_INDEX)]].values[:, 0]
     if rebalance:
         X, Y = do_rebalance(X, Y)
     return X, Y
@@ -41,11 +41,12 @@ def _load_data(csv_path, rebalance=True):
 
 def load_data(csv_path, rebalance=True):
     path = csv_path + "_new.pkl"
-    if os.path.exists(path):
-        with open(path, "rb+") as file:
-            [X, Y] = pickle.load(file)
-    else:
-        X, Y = _load_data(csv_path, rebalance)
-        with open(path, "wb+") as file:
-            pickle.dump([X, Y], file)
+    # if os.path.exists(path):
+    #     with open(path, "rb+") as file:
+    #         [X, Y] = pickle.load(file)
+    # else:
+    #     X, Y = _load_data(csv_path, rebalance)
+    #     with open(path, "wb+") as file:
+    #         pickle.dump([X, Y], file)
+    X, Y = _load_data(csv_path, rebalance)
     return X, Y
