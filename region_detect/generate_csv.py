@@ -22,7 +22,7 @@ class Region2Csv():
         in_segs = np.zeros(len(rlist))
         seg = cv2.imread(seg_path)[:, :, 0]
         _seg = np.zeros_like(seg)
-        _seg[seg == 0] = 1
+        _seg[seg == 255] = 1
         for i in range(len(rlist)):
             r = rlist[i]
             in_size = np.sum(_seg[r])
