@@ -4,7 +4,6 @@ from feature_process import Features
 from region_detect import Super_Region, Region2Csv
 
 TRAIN_IMGS = 1
-# C_LIST = [0.2, 0.3, 0.5, 1.0]
 C_LIST = [20, 80, 150, 350, 550, 900]
 
 from skimage import io
@@ -29,12 +28,6 @@ class Img_Data:
         for c in C_LIST:
             rlist, rmat = Super_Region.combine_region(
                 similarity, c, self.rlist, self.rmat)
-            print(len(rlist))
-            disp_mat = (rmat)/(len(rlist) - 1)
-            _path = "./threshold_{}.jpg".format(c)
-            io.imsave(_path, disp_mat)
-            # cv2.imshow('disp_mat', disp_mat)
-            # cv2.waitKey(0)
             self.rlists.append(rlist)
             self.rmats.append(rmat)
             features = Features(self.img_path, rlist, rmat,

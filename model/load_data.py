@@ -21,7 +21,6 @@ def do_rebalance(X, Y):
     X_more = resample(X_more, n_samples=len(X_less), random_state=0)
     Y_more = resample(Y_more, n_samples=len(Y_less), random_state=0)
     X = np.concatenate([X_more, X_less], axis=0)
-    # X = np.concatenate([Y_more, X_more], axis=0)
     Y = np.concatenate([Y_more, Y_less], axis=0)
     return X, Y
 
@@ -34,7 +33,7 @@ def _load_data(csv_path, rebalance=True):
         X = df[index].values
     except:
         X = df[_index].values
-    Y = df[[str(LABEL_INDEX+1)]].values[:, 0]#changed
+    Y = df[[str(LABEL_INDEX+1)]].values[:, 0]
     if rebalance:
         X, Y = do_rebalance(X, Y)
     return X, Y

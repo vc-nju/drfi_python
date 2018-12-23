@@ -109,12 +109,12 @@ class Super_Region():
                 a = u.find(a)
                 thresholds[a] = e.weight + c / u.elts[a].size
 
-        # # force minimum size of segmentation
-        # for e in edges:
-        #     a = u.find(e.a)
-        #     b = u.find(e.b)
-        #     if a != b and (u.elts[a].size < MIN_REGION_SIZE or u.elts[b].size < MIN_REGION_SIZE):
-        #         u.join(a, b)
+        # force minimum size of segmentation
+        for e in edges:
+            a = u.find(e.a)
+            b = u.find(e.b)
+            if a != b and (u.elts[a].size < MIN_REGION_SIZE or u.elts[b].size < MIN_REGION_SIZE):
+                u.join(a, b)
 
         # use index_array to map the p to index
         index_array = np.ones(num_reg, dtype=np.int32)*-1
@@ -135,3 +135,9 @@ class Super_Region():
             for j in range(rmat.shape[1]):
                 _rmat[i, j] = trans_array[rmat[i, j]]
         return _rlist, _rmat
+
+    @staticmethod
+    def show_region_map(rlist, rmat):
+        disp_mat = rmat/(len(rlist) - 1)
+        cv2.imshow('disp_mat', disp_mat)
+        cv2.waitKey(0)
