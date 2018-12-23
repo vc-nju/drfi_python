@@ -13,7 +13,7 @@ def do_rebalance(X, Y):
     neg_num = len(Y) - pos_num
     X_more = X[Y == 1]
     X_less = X[Y == 0]
-    Y_more = np.ones(int(pos_num))###
+    Y_more = np.ones(int(pos_num))
     Y_less = np.zeros(int(neg_num))
     if pos_num < neg_num:
         X_more, X_less = X_less, X_more
@@ -34,14 +34,15 @@ def _load_data(csv_path, rebalance=True):
         X = df[index].values
     except:
         X = df[_index].values
-    Y = df[[str(LABEL_INDEX)]].values[:, 0]
+    Y = df[[str(LABEL_INDEX+1)]].values[:, 0]
+    print(Y)
     if rebalance:
         X, Y = do_rebalance(X, Y)
     return X, Y
 
 
 def load_data(csv_path, rebalance=True):
-    path = csv_path + ".pkl"
+    path = csv_path + "_new.pkl"
     if os.path.exists(path):
         with open(path, "rb+") as file:
             [X, Y] = pickle.load(file)

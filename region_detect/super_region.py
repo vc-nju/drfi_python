@@ -97,7 +97,6 @@ class Super_Region():
         for i in range(num_reg):
             thresholds[i] /= u.elts[i].size
         edges = []
-        print(similarity)
         for i in range(num_reg - 1):
             for j in range(i+1, num_reg):
                 edges.append(Edge(i, j, similarity[i, j]))

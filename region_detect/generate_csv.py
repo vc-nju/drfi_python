@@ -40,9 +40,10 @@ class Region2Csv():
             | is same_region | 222-dim features |
         """
         data = []
-        line_data = np.zeros([1, 1 + 222])
+        # line_data = np.zeros([1, 1 + 222])  #shallow copy
         for i, comb_f in enumerate(comb_features):
             region_i_id = i
+            line_data = np.zeros([1, 1 + 222])
             for j,  region_j_id in enumerate(comb_f["j_ids"]):
                 # at the edge
                 if in_segs[region_i_id] == 0 or in_segs[region_j_id] == 0:
@@ -68,9 +69,10 @@ class Region2Csv():
             | is same_region | 93-dim features |
         """
         data = []
-        line_data = np.zeros([1, 1 + 93])
+        # line_data = np.zeros([1, 1 + 93])
         for i, features in enumerate(features93):
             # at the edge
+            line_data = np.zeros([1, 1 + 93])
             if in_segs[i] == 0:
                 continue
             is_seg = (in_segs[i] + 1)/2
