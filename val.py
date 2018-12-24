@@ -5,7 +5,7 @@ from model import RandomForest, MLP
 from feature_process import Features
 from region_detect import Super_Region, Region2Csv
 
-TRAIN_IMGS = 5
+TRAIN_IMGS = 20
 C_LIST = [20, 80, 350, 900]
 
 
@@ -39,10 +39,9 @@ class Img_Data:
 
 
 if __name__ == "__main__":
-    its = [i for i in range(1, TRAIN_IMGS + 1) if i % 5 != 0]
-    csv_paths = ["data/csv/train/{}.csv".format(i) for i in its]
-    seg_csv_paths = ["data/csv/train/seg{}.csv".format(i) for i in its]
-    w_csv_paths = ["data/csv/train/w{}.csv".format(i) for i in its]
+    its = [i for i in range(1, TRAIN_IMGS + 1) if i % 5 == 0]
+    csv_paths = ["data/csv/val/{}.csv".format(i) for i in its]
+    seg_csv_paths = ["data/csv/val/seg{}.csv".format(i) for i in its]
     img_paths = ["data/MSRA-B/{}.jpg".format(i) for i in its]
     seg_paths = ["data/MSRA-B/{}.png".format(i) for i in its]
     img_datas = []
@@ -53,12 +52,12 @@ if __name__ == "__main__":
             im_data.rlist, im_data.comb_features, seg_paths[i], csv_paths[i])
         img_datas.append(im_data)
 
-    train_csv_path = "data/csv/train/all.csv"
-    Region2Csv.combine_csv(csv_paths, train_csv_path)
+    val_csv_path = "data/csv/val/all.csv"
+    Region2Csv.combine_csv(csv_paths, val_csv_path)
     rf_simi = RandomForest()
-    rf_simi.train(train_csv_path)
     model_path = "data/model/rf_same_region.pkl"
-    rf_simi.save_model(model_path)
+    rf_simi.load_model(model_path)
+    rf_simi.test(val_csv_path)
 
     for i, im_data in enumerate(img_datas):
         print("finished multi seg {}".format(i))
@@ -71,12 +70,12 @@ if __name__ == "__main__":
                 rlist, im_data.feature93s[j], seg_paths[i], temp_path)
         Region2Csv.combine_csv(csv_temp_paths, seg_csv_paths[i])
 
-    train_csv_path = "data/csv/train/seg_all.csv"
-    Region2Csv.combine_csv(seg_csv_paths, train_csv_path)
+    val_csv_path = "data/csv/val/seg_all.csv"
+    Region2Csv.combine_csv(seg_csv_paths, val_csv_path)
     rf_sal = RandomForest()
-    rf_sal.train(train_csv_path)
     model_path = "data/model/rf_salience.pkl"
-    rf_sal.save_model(model_path)
+    rf_sal.load_model(model_path)
+    rf_sal.test(val_csv_path)
 
     ground_truths = []
     salience_maps = []
@@ -98,10 +97,10 @@ if __name__ == "__main__":
         ground_truths.append(ground_truth.reshape(-1))
 
     mlp = MLP()
-    X_train = np.array(salience_maps)
-    X_train = np.concatenate(X_train, axis=0)
-    Y_train = np.array(ground_truths)
-    Y_train = np.concatenate(Y_train, axis=0)
-    mlp.train(X_train, Y_train)
     model_path = "data/model/mlp.pkl"
-    mlp.save_model(model_path)
+    mlp.load_model(model_path)
+    X_test = np.array(salience_maps)
+    X_test = np.concatenate(X_test, axis=0)
+    Y_test = np.array(ground_truths)
+    Y_test = np.concatenate(Y_test, axis=0)
+    mlp.test(X_test, Y_test)
