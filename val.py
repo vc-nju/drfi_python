@@ -5,7 +5,7 @@ from model import RandomForest, MLP
 from feature_process import Features
 from region_detect import Super_Region, Region2Csv
 
-TRAIN_IMGS = 20
+TRAIN_IMGS = 500
 C_LIST = [20, 80, 350, 900]
 
 
