@@ -43,34 +43,34 @@ if __name__ == "__main__":
     img_paths = ["data/MSRA-B/{}.jpg".format(i) for i in its]
     seg_paths = ["data/MSRA-B/{}.png".format(i) for i in its]
     img_datas = []
-    for i in range(len(its)):
-        print(i)
-        im_data = Img_Data(img_paths[i])
+    # for i in range(len(its)):
+        # print(i)
+        # im_data = Img_Data(img_paths[i])
         # Region2Csv.generate_similar_csv(
             # im_data.rlist, im_data.comb_features, seg_paths[i], csv_paths[i])
-        img_datas.append(im_data)
+        # img_datas.append(im_data)
 
     train_csv_path = "data/csv/train/all.csv"
-    # Region2Csv.combine_csv(csv_paths, train_csv_path)
+    Region2Csv.combine_csv(csv_paths, train_csv_path)
     rf_simi = RandomForest()
-    # rf_simi.train(train_csv_path)
+    rf_simi.train(train_csv_path)
     model_path = "data/model/rf_same_region.pkl"
     # rf_simi.save_model(model_path)
-    rf_simi.load_model(model_path)
+    # rf_simi.load_model(model_path)
 
-    for i, im_data in enumerate(img_datas):
-        print(i)
-        im_data.get_multi_segs(rf_simi)
-        csv_temp_paths = []
-        for j, rlist in enumerate(im_data.rlists):
-            temp_path = "data/csv/temp{}.csv".format(j)
-            csv_temp_paths.append(temp_path)
-            Region2Csv.generate_seg_csv(
-                rlist, im_data.feature93s[j], seg_paths[i], temp_path)
-        Region2Csv.combine_csv(csv_temp_paths, seg_csv_paths[i])
+    # for i, im_data in enumerate(img_datas):
+    #     print(i)
+    #     im_data.get_multi_segs(rf_simi)
+    #     csv_temp_paths = []
+    #     for j, rlist in enumerate(im_data.rlists):
+    #         temp_path = "data/csv/temp{}.csv".format(j)
+    #         csv_temp_paths.append(temp_path)
+    #         Region2Csv.generate_seg_csv(
+    #             rlist, im_data.feature93s[j], seg_paths[i], temp_path)
+    #     Region2Csv.combine_csv(csv_temp_paths, seg_csv_paths[i])
 
-    Region2Csv.combine_csv(seg_csv_paths, train_csv_path)
-    rf_sal = RandomForest()
-    rf_sal.train(train_csv_path)
-    model_path = "data/model/rf_salience.pkl"
-    rf_sal.save_model(model_path)
+    # Region2Csv.combine_csv(seg_csv_paths, train_csv_path)
+    # rf_sal = RandomForest()
+    # rf_sal.train(train_csv_path)
+    # model_path = "data/model/rf_salience.pkl"
+    # rf_sal.save_model(model_path)
