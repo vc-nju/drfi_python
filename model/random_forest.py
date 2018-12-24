@@ -16,7 +16,7 @@ class RandomForest():
         self.clf.fit(X_train, Y_train)
 
     def test(self, test_csv_path):
-        X_test, Y_test = load_data(test_csv_path)
+        X_test, Y_test = load_data(test_csv_path, rebalance=False)
         Y_prob = self.clf.predict_proba(X_test)
         auc = metrics.roc_auc_score(Y_test, Y_prob[:, 1])
         print("model's auc is {}".format(auc))

@@ -88,4 +88,4 @@ class Region2Csv():
         data = [pd.read_csv(path).values for path in path_list if os.path.exists(path)]
         data = np.concatenate(data, axis=0)
         df = pd.DataFrame(data)
-        df.to_csv(all_csv_path)
+        df.to_csv(all_csv_path, index=0)
