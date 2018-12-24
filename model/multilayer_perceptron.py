@@ -1,5 +1,6 @@
 import pickle
 import numpy as np
+from sklearn import metrics
 from sklearn.neural_network import MLPClassifier
 
 from .load_data import do_rebalance
@@ -14,9 +15,9 @@ class MLP():
         self.clf.fit(X_train, Y_train)
 
     def test(self, X_test, Y_test):
-        Y = self.clf.predict(X_test)
-        acc = np.sum(Y==Y_test)/len(Y_test)
-        print("model's accuracy is {}".format(acc))
+        Y_prob = self.clf.predict_proba(X_test)
+        auc = metrics.roc_auc_score(Y_test, Y_prob[:, 1])
+        print("model's auc is {}".format(auc))
 
     def predict(self, X):
         Y_prob = self.clf.predict_proba(X)[:, 1]
