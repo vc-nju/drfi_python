@@ -1,6 +1,7 @@
 import pickle
 import numpy as np
 from sklearn import metrics
+from treeinterpreter import treeinterpreter as ti
 from sklearn.ensemble import RandomForestClassifier
 
 from .load_data import load_data
@@ -24,6 +25,10 @@ class RandomForest():
     def predict(self, X):
         Y_prob = self.clf.predict_proba(X)
         return Y_prob
+
+    def get_weights(self, X):
+        prediction, bias, contributions = ti.predict(self.clf, X)
+        return prediction, bias, contributions
 
     def load_model(self, model_path):
         with open(model_path, "rb+") as file:
