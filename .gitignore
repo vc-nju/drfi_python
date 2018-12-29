@@ -1,6 +1,9 @@
 data/*
+denoise/
 .vscode
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.png
+*.jpg

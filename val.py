@@ -5,7 +5,9 @@ from model import RandomForest, MLP
 from feature_process import Features
 from region_detect import Super_Region, Region2Csv
 
-TRAIN_IMGS = 500
+import generate_noise
+
+TRAIN_IMGS = 5
 C_LIST = [20, 80, 350, 900]
 
 
@@ -39,10 +41,18 @@ class Img_Data:
 
 
 if __name__ == "__main__":
-    its = [i for i in range(1, TRAIN_IMGS + 1) if i % 5 == 0]
+    # its = [i for i in range(1, TRAIN_IMGS + 1) if i % 5 == 0]
+    its = [i for i in range(3001, 3021)]
     csv_paths = ["data/csv/val/{}.csv".format(i) for i in its]
     seg_csv_paths = ["data/csv/val/seg{}.csv".format(i) for i in its]
-    img_paths = ["data/MSRA-B/{}.jpg".format(i) for i in its]
+    # img_paths = ["data/MSRA-B/{}.jpg".format(i) for i in its]
+    # img_paths = ["./val_pic/sp_{}.jpg".format(i) for i in its]
+    # img_paths = ["./denoise/de_spnoise_{}.jpg".format(i) for i in its]
+    # img_paths = ["./val_pic/gauss_{}.jpg".format(i) for i in its]
+    # img_paths = ["./denoise/de_gaussnoise_{}.jpg".format(i) for i in its]
+    # img_paths = ["./val_pic/speckle_{}.jpg".format(i) for i in its]
+    img_paths = ["./denoise/de_specklenoise_{}.jpg".format(i) for i in its]
+
     seg_paths = ["data/MSRA-B/{}.png".format(i) for i in its]
     img_datas = []
     for i in range(len(its)):
