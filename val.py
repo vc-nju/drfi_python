@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import pandas as pd
 
 from model import RandomForest, MLP
 from feature_process import Features
@@ -56,11 +57,11 @@ if __name__ == "__main__":
     seg_paths = ["data/MSRA-B/{}.png".format(i) for i in its]
     img_datas = []
     for i in range(len(its)):
-        print("finished simi {}".format(i))
         im_data = Img_Data(img_paths[i])
         Region2Csv.generate_similar_csv(
             im_data.rlist, im_data.comb_features, seg_paths[i], csv_paths[i])
         img_datas.append(im_data)
+        print("finished simi {}".format(i))
 
     val_csv_path = "data/csv/val/all.csv"
     Region2Csv.combine_csv(csv_paths, val_csv_path)
@@ -70,7 +71,6 @@ if __name__ == "__main__":
     rf_simi.test(val_csv_path)
 
     for i, im_data in enumerate(img_datas):
-        print("finished multi seg {}".format(i))
         im_data.get_multi_segs(rf_simi)
         csv_temp_paths = []
         for j, rlist in enumerate(im_data.rlists):
@@ -79,6 +79,7 @@ if __name__ == "__main__":
             Region2Csv.generate_seg_csv(
                 rlist, im_data.feature93s[j], seg_paths[i], temp_path)
         Region2Csv.combine_csv(csv_temp_paths, seg_csv_paths[i])
+        print("finished multi seg {}".format(i))
 
     val_csv_path = "data/csv/val/seg_all.csv"
     Region2Csv.combine_csv(seg_csv_paths, val_csv_path)
@@ -87,10 +88,14 @@ if __name__ == "__main__":
     rf_sal.load_model(model_path)
     rf_sal.test(val_csv_path)
 
+    mlp = MLP()
+    model_path = "data/model/mlp.pkl"
+    mlp.load_model(model_path)
+
     ground_truths = []
     salience_maps = []
+    rf_sal_weight = np.zeros(93)
     for i, im_data in enumerate(img_datas):
-        print("finish w {}".format(i))
         segs_num = len(im_data.rlists)
         if segs_num < len(C_LIST)+1:
             continue
@@ -101,16 +106,30 @@ if __name__ == "__main__":
             Y = rf_sal.predict(im_data.feature93s[j])[:, 1]
             for k, r in enumerate(rlist):
                 salience_map[j][r] = Y[k]
+        
+            _, _, weights = rf_sal.get_weights(im_data.feature93s[j])
+            rf_sal_weight += np.mean(weights, axis=0)[:, 1]
+        
+        rf_sal_weight /= len(im_data.rlists)
+
         ground_truth = cv2.imread(seg_paths[i])[:, :, 0]
         ground_truth[ground_truth == 255] = 1
-        salience_maps.append(salience_map.reshape([-1, height*width]).T)
+        x = salience_map.reshape([-1, height*width]).T
+        salience_maps.append(x)
         ground_truths.append(ground_truth.reshape(-1))
 
-    mlp = MLP()
-    model_path = "data/model/mlp.pkl"
-    mlp.load_model(model_path)
+        result = mlp.predict(x).reshape([height, width, 1])
+        result[result>0.5] = 255
+        result[result<=0.5] = 0
+        cv2.imwrite("data/result/{}.png".format(its[i]), result.astype(np.uint8))
+        
+        print("finish w {}".format(i))
+
     X_test = np.array(salience_maps)
     X_test = np.concatenate(X_test, axis=0)
     Y_test = np.array(ground_truths)
     Y_test = np.concatenate(Y_test, axis=0)
     mlp.test(X_test, Y_test)
+
+    df = pd.DataFrame(rf_sal_weight/len(img_datas))
+    df.to_csv("data/csv/rf_sal_weight.csv")
