@@ -4,11 +4,16 @@
 3. ![](图片链接，本地相对路径或者http)
 4. Markdown Preview Enhanced. vscode可以预览markdown
 5. ```python or ```c可以用制定语法高亮 -->
+![](https://test-1253607195.cos.ap-shanghai.myqcloud.com/2019-1-1/logo.png)
 # drfi_python
 
 Python realization for Saliency Object Detection: [A Discriminative Regional Feature Integration Approach](http://arxiv.org/pdf/1410.5926v1).
 
-# Overview
+# Preview
+![Origin_photo](https://test-1253607195.cos.ap-shanghai.myqcloud.com/2019-1-1/5.jpg)
+![Saliency_map](https://test-1253607195.cos.ap-shanghai.myqcloud.com/2019-1-1/5.png)
+
+# Feature
 drfi_python is a python version for the paper mentioned above.
 
 Some reasons you might be interested in our realization:
@@ -19,9 +24,6 @@ Some reasons you might be interested in our realization:
 
 We have trained and tested on MSRA-B, and it's auc is 0.923.
 
-![Origin_photo](https://test-1253607195.cos.ap-shanghai.myqcloud.com/2019-1-1/5.jpg)
-![Saliency_map](https://test-1253607195.cos.ap-shanghai.myqcloud.com/2019-1-1/5.png)
-
 # Requirements
 
 - python 3.x
@@ -29,7 +31,7 @@ We have trained and tested on MSRA-B, and it's auc is 0.923.
 - scikit-image 0.14
 - scikit-learn 0.20
 
-# Install
+# Installation
 
 ```bash
 git clone https://github.com/vc-nju/drfi_python.git && cd drfi_python
