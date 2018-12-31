@@ -5,7 +5,10 @@ from .utils import Edge, Universe
 
 MIN_REGION_SIZE = 300
 
+
 class Super_Region():
+    """Divided image into different regions.
+    """
     @staticmethod
     def guass_filter(path):
         im = cv2.imread(path)

@@ -38,9 +38,9 @@ class Img_Data:
 
 
 if __name__ == "__main__":
-    img_id = 3001
-    # img_path = "data/MSRA-B/{}.jpg".format(img_id)
-    img_path = "./val_pic/sp_{}.jpg".format(img_id)
+    img_id = 150
+    img_path = "data/MSRA-B/{}.jpg".format(img_id)
+    # img_path = "./val_pic/sp_{}.jpg".format(img_id)
     im_data = Img_Data(img_path)
 
     rf_simi = RandomForest()

@@ -11,11 +11,6 @@ import numpy as np
 
 
 def gaussian1d(sigma, mean, x, ord):
-    '''
-    @description: Using to do gaussian1d.
-    @param {sigma, mean, x, ord} 
-    @return: Gaussian1d result
-    '''
     x = np.array(x)
     x_ = x - mean
     var = sigma**2
@@ -30,11 +25,6 @@ def gaussian1d(sigma, mean, x, ord):
 
 
 def gaussian2d(sup, scales):
-    '''
-    @description: Using to do gaussian2d.
-    @param {sup, scales} 
-    @return: Gaussian2d result
-    '''
     var = scales * scales
     shape = (sup, sup)
     n, m = [(i - 1)/2 for i in shape]
@@ -44,11 +34,6 @@ def gaussian2d(sup, scales):
 
 
 def log2d(sup, scales):
-    '''
-    @description: Function of log2d.
-    @param {sup, scales} 
-    @return: Log2d result
-    '''
     var = scales * scales
     shape = (sup, sup)
     n, m = [(i - 1)/2 for i in shape]
@@ -59,11 +44,6 @@ def log2d(sup, scales):
 
 
 def makefilter(scale, phasex, phasey, pts, sup):
-    '''
-    @description: A signle filter function
-    @param {scale, phasex, phasey, pts, sup} 
-    @return: Image after filter.
-    '''
     gx = gaussian1d(3*scale, 0, pts[0, ...], phasex)
     gy = gaussian1d(scale,   0, pts[1, ...], phasey)
     image = gx*gy
@@ -72,11 +52,6 @@ def makefilter(scale, phasex, phasey, pts, sup):
 
 
 def makeLMfilters():
-    '''
-    @description: Generate LMfilters.
-    @param {None} 
-    @return: LMfilters
-    '''
     sup = 49
     scalex = np.sqrt(2) * np.array([1, 2, 3])
     norient = 6

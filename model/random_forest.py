@@ -8,6 +8,14 @@ from .load_data import load_data
 
 
 class RandomForest():
+    """Generate RandomForest Model.
+
+    Useing scikit-learn to genearate RF Model.
+
+    Attributes:
+        clf: RandomForest Classifier.
+    """
+
     def __init__(self):
         self.clf = RandomForestClassifier(
             n_estimators=200, max_depth=20, random_state=0, max_features="log2")

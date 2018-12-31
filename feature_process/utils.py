@@ -1,12 +1,3 @@
-'''
-@Description: Utils for generate super regions' features.
-@Author: lizhihao6
-@Github: https://github.com/lizhihao6
-@Date: 2018-11-28 17:02:30
-@LastEditors: lizhihao6
-@LastEditTime: 2018-12-21 02:08:08
-'''
-
 import cv2
 import numpy as np
 from skimage.feature import local_binary_pattern
@@ -18,19 +9,10 @@ A_C = 50.
 NEIGH_AREAS_C = 0.1
 EDGE_NEIGH = 1000
 
+
 class Utils():
-    '''
-    @description: Utils class using to geneate features.
-    @param {img rgb, region lists, region matrix} 
-    @return: Utils class
-    '''
 
     def __init__(self, rgb, rlist, rmat, need_comb_features=True):
-        '''
-        @description: The init of Utils class.
-        @param {img rgb, region lists, region matrix} 
-        @return: None
-        '''
         self.height, self.width = rmat.shape
         self.rgb, self.rlist, self.rmat = rgb, rlist, rmat
         self.lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2Lab)
@@ -42,7 +24,8 @@ class Utils():
         self.color_avg, self.color_var = self.get_avg_var(imgchan)
         self.tex_avg, self.tex_var = self.get_avg_var(self.tex)
         self.lbp_avg, self.lbp_var = self.get_avg_var(self.lbp)
-        self.edge_nums, self.edge_neigh, self.edge_point = self.get_edges(need_comb_features)
+        self.edge_nums, self.edge_neigh, self.edge_point = self.get_edges(
+            need_comb_features)
         if need_comb_features:
             self.edge_prop = self.get_edge_prop()
         self.neigh_areas = self.get_neigh_areas()
@@ -73,11 +56,6 @@ class Utils():
         return _lbp
 
     def get_coord(self):
-        '''
-        @description: Get postion features of regions.
-        @param {None} 
-        @return: Coordinary features
-        '''
         num_reg = len(self.rlist)
         coord = np.zeros([num_reg, 7])
         EPS = 1.
@@ -115,15 +93,6 @@ class Utils():
         return avg, var
 
     def get_edges(self, need_comb_features):
-        '''
-        @description: 
-        @param {None} 
-        @return: edge_nums: the total edge of Ri, 
-                 edge_neigh: the neighbor region of Ri, [(R1,R2,R3...), (R1,R2,R3...),]
-                 edge_point: the point in edge between Ri and Rj, [[[(y1,y2,...yi,),(x1,x2,...xi,)],[(y1,y2,y3,...),(x1,x2,x3,...)]]]
-                 the storage sequence is corrdinated to edge_neigh: for Ri, the nei_point[i][j] means the edge point between Ri and Rj
-                 may be a bit confusing, good luck!
-        '''
         rmat = self.rmat
         rlist = self.rlist
         shape = (rmat.shape[0], rmat.shape[1], 8, )
@@ -183,10 +152,6 @@ class Utils():
         return edge_nums, edge_neigh, edge_point
 
     def get_edge_prop(self):
-        """
-        return:             
-            edge_prob: the property of the edge in two neighbor regions
-        """
         num_reg = len(self.rlist)
         edge_prop = np.zeros((num_reg, num_reg, 7))
         for i in range(num_reg):  # region i
@@ -195,8 +160,10 @@ class Utils():
                 # the points in the edge between Ri and Rj
                 edge_ij = self.edge_point[i][k]
                 num_points = len(edge_ij[0])
-                edge_prop[i, j, 0] = float(sum(edge_ij[0]) / (num_points * self.height))
-                edge_prop[i, j, 1] = float(sum(edge_ij[1]) / (num_points * self.width))
+                edge_prop[i, j, 0] = float(
+                    sum(edge_ij[0]) / (num_points * self.height))
+                edge_prop[i, j, 1] = float(
+                    sum(edge_ij[1]) / (num_points * self.width))
                 sortby_y = sorted(edge_ij[0])
                 sortby_x = sorted(edge_ij[1])
                 tenth = int(num_points * 0.1)
@@ -213,12 +180,9 @@ class Utils():
         num_reg = len(self.rlist)
         diff = np.zeros([num_reg, num_reg])
         sigmadist = 0.4
-        # for i in range(num_reg - 1):
-        #     for j in range(num_reg - 1):
-        #         diff[i, j] = np.sum(
-        #             (self.coord[i][0:2] - self.coord[j][0:2])**2)
         for i in range(num_reg):
-            diff[i] = np.sum((self.coord[i,0:2] - self.coord[:,0:2])**2, axis=1)
+            diff[i] = np.sum(
+                (self.coord[i, 0:2] - self.coord[:, 0:2])**2, axis=1)
         diff = np.exp(-1*diff/sigmadist)
         for j in range(diff.shape[1]):
             diff[:, j] *= len(self.rlist[j][0])
@@ -237,12 +201,8 @@ class Utils():
         pos[:, 0] /= self.height
         pos[:, 1] /= self.width
         diff = np.zeros([num_reg, num_reg])
-        # for i in range(num_reg):
-        #     for j in range(num_reg):
-        #         diff[i, j] = (pos[i][0] - pos[j][0])**2 + \
-        #             (pos[i][1] - pos[j][1])**2
         for i in range(num_reg):
-            diff[i] = np.sum((pos[i,0:2] - pos[:,0:2])**2,axis=1)
+            diff[i] = np.sum((pos[i, 0:2] - pos[:, 0:2])**2, axis=1)
         w = np.exp(-1. * diff / 2)
         return w
 
@@ -280,9 +240,6 @@ class Utils():
     def get_diff(self, array):
         num_reg = array.shape[0]
         mat = np.zeros([num_reg, num_reg])
-        # for i in range(num_reg):
-        #     for j in range(num_reg):
-        #         mat[i][j] = np.abs(array[i] - array[j])
         for i in range(num_reg):
             mat[i] = np.abs(array[i] - array[:])
         return mat
@@ -296,7 +253,7 @@ class Utils():
         for i in range(num_reg):
             a = 2 * (hist[i] - hist[:])**2
             b = hist[i] + hist[:] + 1
-            mat[i] = np.sum(a/b,axis = 1)
+            mat[i] = np.sum(a/b, axis=1)
         return mat
 
     def dot(self, x, hist=False):

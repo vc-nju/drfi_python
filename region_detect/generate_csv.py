@@ -5,7 +5,12 @@ import pandas as pd
 
 
 class Region2Csv():
+    """Trans data into csv.
 
+    Because we need to visualization the features used in combine regions(222-dim) 
+    and generate salience map(93-dim). So we save the features into CSV. And at 
+    last, combine all csvs to train our model.
+    """
     @staticmethod
     def get_in_segs(rlist, seg_path):
         """
@@ -85,7 +90,8 @@ class Region2Csv():
 
     @staticmethod
     def combine_csv(path_list, all_csv_path):
-        data = [pd.read_csv(path).values for path in path_list if os.path.exists(path)]
+        data = [pd.read_csv(
+            path).values for path in path_list if os.path.exists(path)]
         data = np.concatenate(data, axis=0)
         df = pd.DataFrame(data)
         df.to_csv(all_csv_path, index=0)

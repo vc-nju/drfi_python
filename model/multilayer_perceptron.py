@@ -7,6 +7,14 @@ from .load_data import do_rebalance
 
 
 class MLP():
+    """Generate Multiayer Perceptron Model.
+
+    Useing scikit-learn to genearate MLP Model.
+
+    Attributes:
+        clf: MLP Classifier.
+    """
+
     def __init__(self):
         self.clf = MLPClassifier(solver='sgd', activation='relu', alpha=1e-4, hidden_layer_sizes=(20,20,), max_iter=10000, verbose=True, learning_rate_init=.1)
 
