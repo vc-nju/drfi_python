@@ -5,7 +5,7 @@
 4. Markdown Preview Enhanced. vscode可以预览markdown
 5. ```python or ```c可以用制定语法高亮 -->
 ![](https://test-1253607195.cos.ap-shanghai.myqcloud.com/2019-1-1/logo.png)
-# drfi_python
+# DRFI-python
 
 Python realization for Saliency Object Detection: [A Discriminative Regional Feature Integration Approach](http://arxiv.org/pdf/1410.5926v1).
 
