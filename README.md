@@ -37,7 +37,7 @@ We have trained and tested on MSRA-B, and it's auc is 0.923.
 git clone https://github.com/vc-nju/drfi_python.git && cd drfi_python
 mkdir data && mkdir data/csv && mkdir data/model && mkdir data/result
 ```
-The pre_train models can be downloaded from [Google Drive]() and [BaiduYun](). Please copy them to data/model/
+The pre_train models can be downloaded from [Google Drive]() and [BaiduYun](https://pan.baidu.com/s/1dpXedLcdQqZX8nFCTDiIHQ). Please copy them to data/model/
 
 # Test Zoo
 
