@@ -1,5 +1,4 @@
 import cv2
-import logging
 import numpy as np
 from skimage.feature import local_binary_pattern
 
@@ -14,11 +13,6 @@ EDGE_NEIGH = 1000
 class Utils():
 
     def __init__(self, rgb, rlist, rmat, need_comb_features=True):
-        logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-                    datefmt='%m-%d %H:%M:%S')
-        self.logger = logging.getLogger("utils.py")
-        self.logger.info("Start initializing...")
         self.height, self.width = rmat.shape
         self.rgb, self.rlist, self.rmat = rgb, rlist, rmat
         self.lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2Lab)
@@ -39,7 +33,6 @@ class Utils():
         self.a = self.get_a()
 
     def get_tex(self):
-        self.logger.info("get tex")
         num_reg = len(self.rlist)
         ml_fiters = self.ml_kernal()
         gray = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2GRAY)
@@ -55,7 +48,6 @@ class Utils():
         return tex
 
     def get_lbp(self):
-        self.logger.info("get lbp")
         num_reg = len(self.rlist)
         gray = cv2.cvtColor(self.rgb, cv2.COLOR_RGB2GRAY)
         lbp = local_binary_pattern(gray, 8, 1.).astype(np.int32)
@@ -64,7 +56,6 @@ class Utils():
         return _lbp
 
     def get_coord(self):
-        self.logger.info("get coord")
         num_reg = len(self.rlist)
         coord = np.zeros([num_reg, 7])
         EPS = 1.
@@ -89,7 +80,6 @@ class Utils():
         return coord
 
     def get_avg_var(self, a):
-        self.logger.info("get avg var")
         num_reg = len(self.rlist)
         avg = np.zeros([num_reg, a.shape[2]])
         var = np.zeros([num_reg, a.shape[2]])
@@ -103,7 +93,6 @@ class Utils():
         return avg, var
 
     def get_edges(self, need_comb_features):
-        self.logger.info("get edges")
         rmat = self.rmat
         rlist = self.rlist
         shape = (rmat.shape[0], rmat.shape[1], 8, )
@@ -162,7 +151,6 @@ class Utils():
         return edge_nums, edge_neigh, edge_point
 
     def get_edge_prop(self):
-        self.logger.info("get edge prop")
         num_reg = len(self.rlist)
         edge_prop = np.zeros((num_reg, num_reg, 7))
         for i in range(num_reg):  # region i
@@ -188,7 +176,6 @@ class Utils():
         return edge_prop
 
     def get_neigh_areas(self):
-        self.logger.info("get neigh areas")
         num_reg = len(self.rlist)
         diff = np.zeros([num_reg, num_reg])
         sigmadist = 0.4
@@ -204,7 +191,6 @@ class Utils():
         return neigh_areas
 
     def get_w(self):
-        self.logger.info("get w")
         num_reg = len(self.rlist)
         pos = np.zeros([num_reg, 2])
         for i in range(num_reg):
@@ -220,7 +206,6 @@ class Utils():
         return w
 
     def get_a(self):
-        self.logger.info("get a")
         a = np.zeros([len(self.rlist), 1])
         a[:, 0] = [float(len(r[0]))/float(self.width*self.height)
                    for r in self.rlist]
