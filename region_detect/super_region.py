@@ -3,8 +3,6 @@ import numpy as np
 
 from .utils import Edge, Universe
 
-MIN_REGION_SIZE = 300
-
 
 class Super_Region():
     """Divided image into different regions.
@@ -51,7 +49,7 @@ class Super_Region():
             - c: the thresholds: like: 166.
         return:
             -rlist = [
-                        [ (y1, y2, y3,), (x1, x2, x3,) ],  # points in super_region0  
+                        [ (y1, y2, y3, ...), (x1, x2, x3, ...) ],  # points in super_region0  
                         ... ,
                      ]
         """
@@ -80,10 +78,10 @@ class Super_Region():
                 p = u.find(y * width + x)
                 if index_array[p] == -1:
                     index_array[p] = index
-                    rlist.append([(), ()])
+                    rlist.append([[], []])
                     index += 1
-                rlist[index_array[p]][0] += (y,)
-                rlist[index_array[p]][1] += (x,)
+                rlist[index_array[p]][0].append(y)
+                rlist[index_array[p]][1].append(x)
         rmat = np.zeros(im.shape[0:2], dtype=np.int32)
         for i in range(len(rlist)):
             rlist[i] = tuple(rlist[i])
@@ -91,11 +89,11 @@ class Super_Region():
         return rlist, rmat
 
     @staticmethod
-    def combine_region(similarity, c, rlist, rmat):
+    def combine_region(similarity, K, rlist, rmat, MIN_REGION_SIZE=300):
         num_reg = len(rlist)
         elt_sizes = [len(r[0]) for r in rlist]
         u = Universe(elt_sizes, num_reg)
-        thresholds = np.ones(num_reg) * c
+        thresholds = np.ones(num_reg) * K
         for i in range(num_reg):
             thresholds[i] /= u.elts[i].size
         edges = []
@@ -109,7 +107,7 @@ class Super_Region():
             if a != b and e.weight <= thresholds[a] and e.weight <= thresholds[b]:
                 u.join(a, b)
                 a = u.find(a)
-                thresholds[a] = e.weight + c / u.elts[a].size
+                thresholds[a] = e.weight + K / u.elts[a].size
 
         # force minimum size of segmentation
         for e in edges:
@@ -127,10 +125,10 @@ class Super_Region():
             p = u.find(i)
             if index_array[p] == -1:
                 index_array[p] = index
-                _rlist.append([(), ()])
+                _rlist.append([[], []])
                 index += 1
-            _rlist[index_array[p]][0] += rlist[i][0]
-            _rlist[index_array[p]][1] += rlist[i][1]
+            _rlist[index_array[p]][0].extend(rlist[i][0])
+            _rlist[index_array[p]][1].extend(rlist[i][1])
             trans_array[i] = index_array[p]
         _rmat = np.zeros_like(rmat)
         for i in range(rmat.shape[0]):
